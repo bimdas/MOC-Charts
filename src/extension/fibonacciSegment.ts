@@ -105,7 +105,15 @@ const fibonacciSegment: OverlayTemplate = {
             align: textAlign,
             baseline: textBaseline
           },
-          styles: { color: level.color }
+          styles: {
+            color: level.color,
+            paddingLeft: 0,
+            paddingRight: 0,
+            paddingTop: 0,
+            paddingBottom: 0,
+            backgroundColor: 'transparent',
+            borderColor: 'transparent'
+          }
         })
       })
     }

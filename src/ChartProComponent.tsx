@@ -589,7 +589,7 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
             onDrawingItemClick={overlay => {
               widget?.createOverlay({
                 ...overlay,
-                onDoubleClick: (event: any) => {
+                onRightClick: (event: any) => {
                   if (overlay.name === 'fibonacciSegment') {
                     setOverlaySettingModalParams({ visible: true, overlay: event.overlay })
                     return true
