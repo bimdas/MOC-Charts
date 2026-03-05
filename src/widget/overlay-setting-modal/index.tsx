@@ -12,11 +12,11 @@
  * limitations under the License.
  */
 
-import { Component, createSignal, For, Show } from 'solid-js'
+import { Component, createSignal, For, onMount, onCleanup } from 'solid-js'
 
 import { utils, Overlay } from 'klinecharts'
 
-import { Modal, Input, Checkbox, Select, Button } from '../../component'
+import { Select } from '../../component'
 
 import i18n from '../../i18n'
 
@@ -44,121 +44,151 @@ export const defaultFibonacciExtendData = {
 }
 
 const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
+    let panelRef: HTMLDivElement | undefined
+
     const [extendData, setExtendData] = createSignal(
         utils.clone(props.overlay.extendData || defaultFibonacciExtendData)
     )
 
     const alignmentOptions = [
-        { key: 'left', text: i18n('left', props.locale) },
-        { key: 'center', text: i18n('center', props.locale) },
-        { key: 'right', text: i18n('right', props.locale) }
+        { key: 'left', text: 'Left' },
+        { key: 'center', text: 'Center' },
+        { key: 'right', text: 'Right' }
     ]
 
     const positionOptions = [
-        { key: 'top', text: i18n('top', props.locale) },
-        { key: 'middle', text: i18n('middle', props.locale) },
-        { key: 'bottom', text: i18n('bottom', props.locale) }
+        { key: 'top', text: 'Top' },
+        { key: 'middle', text: 'Middle' },
+        { key: 'bottom', text: 'Bottom' }
     ]
 
+    const handleClickOutside = (e: MouseEvent) => {
+        if (panelRef && !panelRef.contains(e.target as Node)) {
+            props.onConfirm(extendData())
+            props.onClose()
+        }
+    }
+
+    onMount(() => {
+        setTimeout(() => {
+            document.addEventListener('mousedown', handleClickOutside)
+        }, 50)
+    })
+
+    onCleanup(() => {
+        document.removeEventListener('mousedown', handleClickOutside)
+    })
+
     return (
-        <Modal
-            title={i18n('settings', props.locale)}
-            width={400}
-            buttons={[
-                {
-                    type: 'confirm',
-                    children: i18n('confirm', props.locale),
-                    onClick: () => {
+        <div class="klinecharts-pro-overlay-setting-panel" ref={panelRef}>
+            {/* Header */}
+            <div class="panel-header">
+                <span class="panel-title">Fib Settings</span>
+                <span
+                    class="panel-close"
+                    onClick={() => {
                         props.onConfirm(extendData())
                         props.onClose()
-                    }
-                }
-            ]}
-            onClose={props.onClose}>
-            <div class="klinecharts-pro-overlay-setting-modal-content">
-                <Show when={props.overlay.name === 'fibonacciSegment'}>
-                    <div class="setting-row">
-                        <Checkbox
-                            checked={extendData().extendLeft}
-                            label={i18n('extendLeft', props.locale)}
-                            onChange={v => setExtendData({ ...extendData(), extendLeft: v })}
-                        />
-                        <Checkbox
-                            checked={extendData().extendRight}
-                            label={i18n('extendRight', props.locale)}
-                            onChange={v => setExtendData({ ...extendData(), extendRight: v })}
-                        />
-                    </div>
-                    <div class="setting-row">
-                        <span>{i18n('labelAlignment', props.locale)}</span>
-                        <Select
-                            style={{ width: '120px' }}
-                            value={extendData().labelAlignment}
-                            dataSource={alignmentOptions}
-                            onSelected={(v: any) => setExtendData({ ...extendData(), labelAlignment: v.key })}
-                        />
-                    </div>
-                    <div class="setting-row">
-                        <span>{i18n('labelPosition', props.locale)}</span>
-                        <Select
-                            style={{ width: '120px' }}
-                            value={extendData().labelPosition}
-                            dataSource={positionOptions}
-                            onSelected={(v: any) => setExtendData({ ...extendData(), labelPosition: v.key })}
-                        />
-                    </div>
-                    <div class="levels-container">
-                        <For each={extendData().levels}>
-                            {(level, index) => (
-                                <div class="level-row">
-                                    <Checkbox
-                                        checked={level.visible}
-                                        onChange={v => {
-                                            const newLevels = [...extendData().levels];
-                                            newLevels[index()].visible = v;
-                                            setExtendData({ ...extendData(), levels: newLevels });
-                                        }} />
-                                    <Input
-                                        style={{ width: '100px', 'margin-left': '8px' }}
-                                        value={level.value}
-                                        onChange={v => {
-                                            const newLevels = [...extendData().levels];
-                                            newLevels[index()].value = Number(v);
-                                            setExtendData({ ...extendData(), levels: newLevels });
-                                        }} />
-                                    <input
-                                        type="color"
-                                        style="margin-left: 8px; border: none; padding: 0; width: 24px; height: 24px; cursor: pointer; background: transparent; border-radius: 4px;"
-                                        value={level.color}
-                                        onChange={(e: any) => {
-                                            const newLevels = [...extendData().levels];
-                                            newLevels[index()].color = e.target.value;
-                                            setExtendData({ ...extendData(), levels: newLevels });
-                                        }} />
-                                    <span
-                                        style="margin-left: auto; cursor: pointer; color: #f23645; font-size: 16px; font-weight: bold; width: 24px; text-align: center; user-select: none;"
-                                        onClick={() => {
-                                            const newLevels = [...extendData().levels];
-                                            newLevels.splice(index(), 1);
-                                            setExtendData({ ...extendData(), levels: newLevels });
-                                        }}>
-                                        &times;
-                                    </span>
-                                </div>
-                            )}
-                        </For>
-                        <div
-                            style="margin-top: 12px; cursor: pointer; color: #2962ff; font-weight: 500; font-size: 14px;"
-                            onClick={() => {
-                                const newLevels = [...extendData().levels, { value: 0, color: '#787B86', visible: true }];
-                                setExtendData({ ...extendData(), levels: newLevels });
-                            }}>
-                            + Add Level
-                        </div>
-                    </div>
-                </Show>
+                    }}>
+                    &times;
+                </span>
             </div>
-        </Modal>
+
+            {/* Options row */}
+            <div class="panel-options">
+                <label class="option-toggle">
+                    <input
+                        type="checkbox"
+                        checked={extendData().extendLeft}
+                        onChange={(e: any) => setExtendData({ ...extendData(), extendLeft: e.target.checked })}
+                    />
+                    <span>Extend L</span>
+                </label>
+                <label class="option-toggle">
+                    <input
+                        type="checkbox"
+                        checked={extendData().extendRight}
+                        onChange={(e: any) => setExtendData({ ...extendData(), extendRight: e.target.checked })}
+                    />
+                    <span>Extend R</span>
+                </label>
+                <div class="option-select">
+                    <span class="option-label">Align</span>
+                    <Select
+                        style={{ width: '75px' }}
+                        value={extendData().labelAlignment}
+                        dataSource={alignmentOptions}
+                        onSelected={(v: any) => setExtendData({ ...extendData(), labelAlignment: v.key })}
+                    />
+                </div>
+                <div class="option-select">
+                    <span class="option-label">Pos</span>
+                    <Select
+                        style={{ width: '75px' }}
+                        value={extendData().labelPosition}
+                        dataSource={positionOptions}
+                        onSelected={(v: any) => setExtendData({ ...extendData(), labelPosition: v.key })}
+                    />
+                </div>
+            </div>
+
+            {/* Levels list */}
+            <div class="panel-levels">
+                <For each={extendData().levels}>
+                    {(level, index) => (
+                        <div class="level-row">
+                            <input
+                                type="checkbox"
+                                class="level-check"
+                                checked={level.visible}
+                                onChange={(e: any) => {
+                                    const newLevels = [...extendData().levels];
+                                    newLevels[index()].visible = e.target.checked;
+                                    setExtendData({ ...extendData(), levels: newLevels });
+                                }}
+                            />
+                            <input
+                                type="text"
+                                class="level-value"
+                                value={level.value}
+                                onChange={(e: any) => {
+                                    const newLevels = [...extendData().levels];
+                                    newLevels[index()].value = Number(e.target.value);
+                                    setExtendData({ ...extendData(), levels: newLevels });
+                                }}
+                            />
+                            <input
+                                type="color"
+                                class="level-color"
+                                value={level.color}
+                                onInput={(e: any) => {
+                                    const newLevels = [...extendData().levels];
+                                    newLevels[index()].color = e.target.value;
+                                    setExtendData({ ...extendData(), levels: newLevels });
+                                }}
+                            />
+                            <span
+                                class="level-remove"
+                                onClick={() => {
+                                    const newLevels = [...extendData().levels];
+                                    newLevels.splice(index(), 1);
+                                    setExtendData({ ...extendData(), levels: newLevels });
+                                }}>
+                                &times;
+                            </span>
+                        </div>
+                    )}
+                </For>
+                <div
+                    class="add-level"
+                    onClick={() => {
+                        const newLevels = [...extendData().levels, { value: 0, color: '#787B86', visible: true }];
+                        setExtendData({ ...extendData(), levels: newLevels });
+                    }}>
+                    + Add
+                </div>
+            </div>
+        </div>
     )
 }
 

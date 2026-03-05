@@ -1,28 +1,166 @@
 @import (reference) '../../base.less';
 
-.@{prefix-cls}-overlay-setting-modal-content {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-top: 16px;
+.@{prefix-cls}-overlay-setting-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    width: 320px;
+    background-color: var(--klinecharts-pro-popover-background-color);
+    border: 1px solid var(--klinecharts-pro-border-color);
+    border-radius: 6px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+    color: var(--klinecharts-pro-text-color);
+    overflow: visible;
 
-    .setting-row {
+    .panel-header {
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--klinecharts-pro-border-color);
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .panel-close {
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            color: var(--klinecharts-pro-text-second-color);
+            user-select: none;
+
+            &:hover {
+                color: var(--klinecharts-pro-primary-color);
+            }
+        }
     }
 
-    .levels-container {
+    .panel-options {
         display: flex;
-        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: center;
         gap: 8px;
-        margin-top: 8px;
-        border-top: 1px solid var(--klinecharts-pro-border-color);
-        padding-top: 16px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--klinecharts-pro-border-color);
+
+        .option-toggle {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            user-select: none;
+
+            input[type="checkbox"] {
+                width: 14px;
+                height: 14px;
+                margin: 0;
+                cursor: pointer;
+                accent-color: var(--klinecharts-pro-primary-color);
+            }
+
+            span {
+                font-size: 11px;
+                color: var(--klinecharts-pro-text-second-color);
+            }
+        }
+
+        .option-select {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            .option-label {
+                font-size: 11px;
+                color: var(--klinecharts-pro-text-second-color);
+                white-space: nowrap;
+            }
+        }
+    }
+
+    .panel-levels {
+        padding: 6px 12px 10px;
+        max-height: 260px;
+        overflow-y: auto;
 
         .level-row {
             display: flex;
             align-items: center;
+            gap: 6px;
+            height: 28px;
+
+            .level-check {
+                width: 14px;
+                height: 14px;
+                margin: 0;
+                cursor: pointer;
+                accent-color: var(--klinecharts-pro-primary-color);
+                flex-shrink: 0;
+            }
+
+            .level-value {
+                flex: 1;
+                min-width: 0;
+                height: 22px;
+                padding: 0 6px;
+                border: 1px solid var(--klinecharts-pro-border-color);
+                border-radius: 3px;
+                background: transparent;
+                color: var(--klinecharts-pro-text-color);
+                font-size: 12px;
+                outline: none;
+
+                &:focus {
+                    border-color: var(--klinecharts-pro-primary-color);
+                }
+            }
+
+            .level-color {
+                width: 22px;
+                height: 22px;
+                padding: 0;
+                border: 1px solid var(--klinecharts-pro-border-color);
+                border-radius: 3px;
+                background: transparent;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            .level-remove {
+                width: 18px;
+                height: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: var(--klinecharts-pro-text-second-color);
+                font-size: 14px;
+                border-radius: 3px;
+                flex-shrink: 0;
+
+                &:hover {
+                    color: #F23645;
+                    background: rgba(242, 54, 69, 0.1);
+                }
+            }
+        }
+
+        .add-level {
+            margin-top: 4px;
+            padding: 4px 0;
+            cursor: pointer;
+            color: var(--klinecharts-pro-primary-color);
+            font-size: 11px;
+            font-weight: 500;
+            user-select: none;
+
+            &:hover {
+                text-decoration: underline;
+            }
         }
     }
 }

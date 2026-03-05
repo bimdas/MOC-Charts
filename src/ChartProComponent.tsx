@@ -93,7 +93,9 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
 
   const [screenshotUrl, setScreenshotUrl] = createSignal('')
 
-  const [drawingBarVisible, setDrawingBarVisible] = createSignal(props.drawingBarVisible)
+  const [drawingBarVisible, setDrawingBarVisible] = createSignal(props.drawingBarVisible ?? true)
+
+  const [selectedOverlayId, setSelectedOverlayId] = createSignal<string>('')
 
   const [symbolSearchModalVisible, setSymbolSearchModalVisible] = createSignal(false)
 
@@ -538,19 +540,6 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
           }}
         />
       </Show>
-      <Show when={overlaySettingModalParams().visible}>
-        <OverlaySettingModal
-          locale={props.locale}
-          overlay={overlaySettingModalParams().overlay!}
-          onClose={() => { setOverlaySettingModalParams({ visible: false, overlay: null }) }}
-          onConfirm={(extendData) => {
-            const params = overlaySettingModalParams()
-            if (params.overlay) {
-              widget?.overrideOverlay({ id: params.overlay.id, extendData })
-            }
-          }}
-        />
-      </Show>
       <PeriodBar
         locale={props.locale}
         symbol={symbol()}
@@ -578,6 +567,19 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
           }
         }}
       />
+      <Show when={overlaySettingModalParams().visible}>
+        <OverlaySettingModal
+          locale={props.locale}
+          overlay={overlaySettingModalParams().overlay!}
+          onClose={() => { setOverlaySettingModalParams({ visible: false, overlay: null }) }}
+          onConfirm={(extendData) => {
+            const params = overlaySettingModalParams()
+            if (params.overlay) {
+              widget?.overrideOverlay({ id: params.overlay.id, extendData })
+            }
+          }}
+        />
+      </Show>
       <div
         class="klinecharts-pro-content">
         <Show when={loadingVisible()}>
@@ -589,6 +591,18 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
             onDrawingItemClick={overlay => {
               widget?.createOverlay({
                 ...overlay,
+                onSelected: (event: any) => {
+                  setSelectedOverlayId(event.overlay.id)
+                  return true
+                },
+                onDeselected: (event: any) => {
+                  setTimeout(() => {
+                    if (selectedOverlayId() === event.overlay.id) {
+                      setSelectedOverlayId('')
+                    }
+                  }, 100)
+                  return true
+                },
                 onRightClick: (event: any) => {
                   if (overlay.name === 'fibonacciSegment') {
                     setOverlaySettingModalParams({ visible: true, overlay: event.overlay })
@@ -601,7 +615,14 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
             onModeChange={mode => { widget?.overrideOverlay({ mode: mode as OverlayMode }) }}
             onLockChange={lock => { widget?.overrideOverlay({ lock }) }}
             onVisibleChange={visible => { widget?.overrideOverlay({ visible }) }}
-            onRemoveClick={(groupId) => { widget?.removeOverlay({ groupId }) }} />
+            onRemoveClick={(groupId) => {
+              if (selectedOverlayId()) {
+                widget?.removeOverlay({ id: selectedOverlayId() })
+                setSelectedOverlayId('')
+              } else {
+                widget?.removeOverlay({ groupId })
+              }
+            }} />
         </Show>
         <div
           ref={widgetRef}
