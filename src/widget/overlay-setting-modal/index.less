@@ -1,0 +1,28 @@
+@import (reference) '../../base.less';
+
+.@{prefix-cls}-overlay-setting-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+
+    .setting-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .levels-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+        border-top: 1px solid var(--klinecharts-pro-border-color);
+        padding-top: 16px;
+
+        .level-row {
+            display: flex;
+            align-items: center;
+        }
+    }
+}

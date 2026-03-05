@@ -26,7 +26,7 @@ import { SelectDataSourceItem, Loading } from './component'
 
 import {
   PeriodBar, DrawingBar, IndicatorModal, TimezoneModal, SettingModal,
-  ScreenshotModal, IndicatorSettingModal, SymbolSearchModal
+  ScreenshotModal, IndicatorSettingModal, SymbolSearchModal, OverlaySettingModal
 } from './widget'
 
 import { translateTimezone } from './widget/timezone-modal/data'
@@ -101,6 +101,10 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
 
   const [indicatorSettingModalParams, setIndicatorSettingModalParams] = createSignal({
     visible: false, indicatorName: '', paneId: '', calcParams: [] as Array<any>
+  })
+
+  const [overlaySettingModalParams, setOverlaySettingModalParams] = createSignal({
+    visible: false, overlay: null as any
   })
 
   props.ref({
@@ -534,6 +538,19 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
           }}
         />
       </Show>
+      <Show when={overlaySettingModalParams().visible}>
+        <OverlaySettingModal
+          locale={props.locale}
+          overlay={overlaySettingModalParams().overlay!}
+          onClose={() => { setOverlaySettingModalParams({ visible: false, overlay: null }) }}
+          onConfirm={(extendData) => {
+            const params = overlaySettingModalParams()
+            if (params.overlay) {
+              widget?.overrideOverlay({ id: params.overlay.id, extendData })
+            }
+          }}
+        />
+      </Show>
       <PeriodBar
         locale={props.locale}
         symbol={symbol()}
@@ -569,7 +586,18 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
         <Show when={drawingBarVisible()}>
           <DrawingBar
             locale={props.locale}
-            onDrawingItemClick={overlay => { widget?.createOverlay(overlay) }}
+            onDrawingItemClick={overlay => {
+              widget?.createOverlay({
+                ...overlay,
+                onDoubleClick: (event: any) => {
+                  if (overlay.name === 'fibonacciSegment') {
+                    setOverlaySettingModalParams({ visible: true, overlay: event.overlay })
+                    return true
+                  }
+                  return false
+                }
+              } as any)
+            }}
             onModeChange={mode => { widget?.overrideOverlay({ mode: mode as OverlayMode }) }}
             onLockChange={lock => { widget?.overrideOverlay({ lock }) }}
             onVisibleChange={visible => { widget?.overrideOverlay({ visible }) }}
