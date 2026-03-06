@@ -1,4 +1,4 @@
-<h1 align="center">KLineChart Pro</h1>
+<h1 align="center">MOC Charts - Fork of Klinechart Pro</h1>
 <p align="center">Financial chart built out of the box based on KLineChart.</p>
 
 <div align="center">
