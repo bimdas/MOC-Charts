@@ -12,6 +12,7 @@
   --klinecharts-pro-text-second-color: @c-text-second-light;
   --klinecharts-pro-border-color: @c-border-light;
   --klinecharts-pro-selected-color: fade(@c-primary, 15%);
+
   &[data-theme="dark"] {
     --klinecharts-pro-hover-background-color: @c-hover-background-dark;
     --klinecharts-pro-background-color: @c-background-dark;
@@ -20,25 +21,38 @@
     --klinecharts-pro-text-second-color: @c-text-second-dark;
     --klinecharts-pro-border-color: @c-border-dark;
   }
+
   position: relative;
   display: flex;
   flex-direction: column;
   color: var(--klinecharts-pro-text-color);
   background-color: var(--klinecharts-pro-background-color);
+  font-family: inherit;
   font-size: 14px;
   height: 80vh;
+
+  /* Force override browser defaults on inputs inside pro container */
+  input,
+  button,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+
   &-watermark {
     position: absolute;
     left: 50%;
     top: 50%;
     z-index: 1;
     transform: translateX(-50%) translateY(-50%);
+
     .logo {
       width: 160px;
       height: 184px;
       fill: var(--klinecharts-pro-border-color);
     }
   }
+
   &-price-unit {
     display: none;
     position: absolute;
@@ -57,6 +71,7 @@
     border: solid 1px var(--klinecharts-pro-border-color);
     background-color: var(--klinecharts-pro-background-color);
   }
+
   &-load-icon {
     position: absolute;
     left: 0;
@@ -64,6 +79,7 @@
     z-index: -1;
     opacity: 0;
   }
+
   &-content {
     position: relative;
     display: flex;
@@ -71,10 +87,12 @@
     width: 100%;
     height: @widget-height;
   }
+
   &-widget {
     width: @widget-width;
     height: 100%;
     margin-left: 0;
+
     &[data-drawing-bar-visible="false"] {
       width: 100%;
     }

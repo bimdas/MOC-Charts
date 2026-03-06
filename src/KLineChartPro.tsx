@@ -41,11 +41,40 @@ export default class KLineChartPro implements ChartPro {
     this._container.classList.add('klinecharts-pro')
     this._container.setAttribute('data-theme', options.theme ?? 'light')
 
+    const fontFamily = 'Inter, sans-serif'
+    const fontThemeOverrides = {
+      candle: {
+        tooltip: { text: { family: fontFamily } },
+        priceMark: {
+          high: { textFamily: fontFamily },
+          low: { textFamily: fontFamily },
+          last: { text: { family: fontFamily } }
+        }
+      },
+      indicator: {
+        tooltip: { text: { family: fontFamily } },
+        lastValueMark: { text: { family: fontFamily } }
+      },
+      xAxis: { tickText: { family: fontFamily } },
+      yAxis: { tickText: { family: fontFamily } },
+      crosshair: {
+        horizontal: { text: { family: fontFamily } },
+        vertical: { text: { family: fontFamily } }
+      },
+      overlay: {
+        text: { family: fontFamily },
+        rectText: { family: fontFamily }
+      }
+    }
+
+    const mergedStyles = utils.clone(options.styles ?? {})
+    utils.merge(mergedStyles as any, fontThemeOverrides)
+
     render(
       () => (
         <ChartProComponent
           ref={(chart: ChartPro) => { this._chartApi = chart }}
-          styles={options.styles ?? {}}
+          styles={mergedStyles}
           watermark={options.watermark ?? (Logo as Node)}
           theme={options.theme ?? 'light'}
           locale={options.locale ?? 'zh-CN'}
