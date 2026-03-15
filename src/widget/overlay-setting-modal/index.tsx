@@ -43,6 +43,22 @@ export const defaultFibonacciExtendData = {
     labelPosition: 'top'
 }
 
+const LAST_SETTINGS_KEY = 'klinecharts_fib_last_settings'
+
+export function getLastFibSettings(): any {
+    try {
+        const saved = localStorage.getItem(LAST_SETTINGS_KEY)
+        if (saved) return JSON.parse(saved)
+    } catch (e) { }
+    return utils.clone(defaultFibonacciExtendData)
+}
+
+function saveLastFibSettings(data: any): void {
+    try {
+        localStorage.setItem(LAST_SETTINGS_KEY, JSON.stringify(data))
+    } catch (e) { }
+}
+
 const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
     let panelRef: HTMLDivElement | undefined
 
@@ -116,17 +132,14 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
 
     const handleClickOutside = (e: MouseEvent) => {
         if (panelRef && !panelRef.contains(e.target as Node)) {
-            props.onConfirm(extendData())
+            const data = extendData()
+            saveLastFibSettings(data)
+            props.onConfirm(data)
             props.onClose()
         }
     }
 
     onMount(() => {
-        try {
-            const saved = localStorage.getItem('klinecharts_fib_templates')
-            if (saved) setTemplates(JSON.parse(saved))
-        } catch (e) { }
-
         setTimeout(() => {
             document.addEventListener('mousedown', handleClickOutside)
         }, 50)
@@ -144,7 +157,9 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                 <span
                     class="panel-close"
                     onClick={() => {
-                        props.onConfirm(extendData())
+                        const data = extendData()
+                        saveLastFibSettings(data)
+                        props.onConfirm(data)
                         props.onClose()
                     }}>
                     &times;
@@ -268,7 +283,7 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                 </div>
                 <div class="action-buttons" style={{ display: 'flex', gap: '8px' }}>
                     <button class="btn-cancel" onClick={() => props.onClose()} style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #454545', color: '#fff', 'border-radius': '4px', cursor: 'pointer' }}>Cancel</button>
-                    <button class="btn-confirm" onClick={() => { props.onConfirm(extendData()); props.onClose(); }} style={{ padding: '4px 12px', background: '#2962FF', border: 'none', color: '#fff', 'border-radius': '4px', cursor: 'pointer' }}>Ok</button>
+                    <button class="btn-confirm" onClick={() => { const data = extendData(); saveLastFibSettings(data); props.onConfirm(data); props.onClose(); }} style={{ padding: '4px 12px', background: '#2962FF', border: 'none', color: '#fff', 'border-radius': '4px', cursor: 'pointer' }}>Ok</button>
                 </div>
             </div>
 

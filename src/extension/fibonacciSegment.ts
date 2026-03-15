@@ -23,7 +23,7 @@ const fibonacciSegment: OverlayTemplate = {
   createPointFigures: ({ coordinates, overlay, precision, bounding }) => {
     const figures: any[] = []
 
-    const defaultExtendData = {
+    const hardcodedDefaults = {
       levels: [
         { value: 0, color: '#787B86', visible: true },
         { value: 0.236, color: '#F23645', visible: true },
@@ -38,6 +38,13 @@ const fibonacciSegment: OverlayTemplate = {
       labelAlignment: 'right',
       labelPosition: 'top'
     }
+
+    let defaultExtendData = hardcodedDefaults
+    try {
+      const saved = localStorage.getItem('klinecharts_fib_last_settings')
+      if (saved) defaultExtendData = JSON.parse(saved)
+    } catch (e) { }
+
     const extendData = overlay.extendData || defaultExtendData
     const levels = extendData.levels || defaultExtendData.levels
 

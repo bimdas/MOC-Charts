@@ -29,6 +29,8 @@ import {
   ScreenshotModal, IndicatorSettingModal, SymbolSearchModal, OverlaySettingModal
 } from './widget'
 
+import { getLastFibSettings } from './widget/overlay-setting-modal'
+
 import { translateTimezone } from './widget/timezone-modal/data'
 
 import { SymbolInfo, Period, ChartProOptions, ChartPro } from './types'
@@ -591,6 +593,7 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
             onDrawingItemClick={overlay => {
               widget?.createOverlay({
                 ...overlay,
+                ...(overlay.name === 'fibonacciSegment' ? { extendData: getLastFibSettings() } : {}),
                 onSelected: (event: any) => {
                   setSelectedOverlayId(event.overlay.id)
                   return true
