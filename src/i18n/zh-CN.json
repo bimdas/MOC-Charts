@@ -117,7 +117,8 @@
   "normal": "线性轴",
   "percentage": "百分比轴",
   "log": "对数轴",
-  "reverse_coordinate": "倒置坐标",
-  "grid_show": "网格线显示",
-  "restore_default": "恢复默认"
+  "reverse_coordinate": "反转坐标轴",
+  "grid_show": "显示网格",
+  "restore_default": "恢复默认值",
+  "ruler": "测量"
 }

@@ -114,6 +114,14 @@ const DrawingBar: Component<DrawingBarProps> = props => {
           </div>
         ))
       }
+      <div
+        class="item">
+        <span
+          style="width:32px;height:32px"
+          onClick={() => { props.onDrawingItemClick({ name: 'ruler', lock: lock(), mode: mode() as OverlayMode }) }}>
+          <Icon name="ruler" />
+        </span>
+      </div>
       <span class="split-line"/>
       <div
         class="item"

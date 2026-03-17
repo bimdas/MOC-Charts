@@ -44,6 +44,7 @@ import eightWaves from './eightWaves'
 import anyWaves from './anyWaves'
 import abcd from './abcd'
 import xabcd from './xabcd'
+import ruler from './ruler'
 
 import weakMagnet from './weakMagnet'
 import strongMagnet from './strongMagnet'
@@ -97,7 +98,8 @@ export const mapping = {
   unlock,
   visible,
   invisible,
-  remove
+  remove,
+  ruler
 }
 
 export function createSingleLineOptions (locale: string): SelectDataSourceItem[] {

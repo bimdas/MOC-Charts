@@ -599,6 +599,10 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
                   return true
                 },
                 onDeselected: (event: any) => {
+                  if (overlay.name === 'ruler') {
+                    widget?.removeOverlay({ id: event.overlay.id })
+                    return true
+                  }
                   setTimeout(() => {
                     if (selectedOverlayId() === event.overlay.id) {
                       setSelectedOverlayId('')
