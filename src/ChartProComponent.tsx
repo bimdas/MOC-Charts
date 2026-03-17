@@ -230,7 +230,7 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
 
     window.addEventListener('resize', documentResize)
     const ref = widgetRef as unknown as HTMLDivElement
-    ref?.addEventListener('mousedown', handleMouseDown)
+    ref?.addEventListener('mousedown', handleMouseDown, true)
     ref?.addEventListener('mouseup', handleMouseUp, true)
     ref?.addEventListener('click', handleClick, true)
     widget = init(widgetRef!, {
