@@ -136,8 +136,8 @@ export function createPolygonOptions (locale: string): SelectDataSourceItem[] {
 
 export function createFibonacciOptions (locale: string): SelectDataSourceItem[] {
   return [
-    { key: 'fibonacciLine', text: i18n('fibonacci_line', locale) },
     { key: 'fibonacciSegment', text: i18n('fibonacci_segment', locale) },
+    { key: 'fibonacciLine', text: i18n('fibonacci_line', locale) },
     { key: 'fibonacciCircle', text: i18n('fibonacci_circle', locale) },
     { key: 'fibonacciSpiral', text: i18n('fibonacci_spiral', locale) },
     { key: 'fibonacciSpeedResistanceFan', text: i18n('fibonacci_speed_resistance_fan', locale) },

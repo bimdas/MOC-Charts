@@ -39,7 +39,7 @@ const DrawingBar: Component<DrawingBarProps> = props => {
   const [singleLineIcon, setSingleLineIcon] = createSignal('horizontalStraightLine')
   const [moreLineIcon, setMoreLineIcon] = createSignal('priceChannelLine')
   const [polygonIcon, setPolygonIcon] = createSignal('circle')
-  const [fibonacciIcon, setFibonacciIcon] = createSignal('fibonacciLine')
+  const [fibonacciIcon, setFibonacciIcon] = createSignal('fibonacciSegment')
   const [waveIcon, setWaveIcon] = createSignal('xabcd')
 
   const [modeIcon, setModeIcon] = createSignal('weak_magnet')
