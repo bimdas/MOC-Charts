@@ -95,7 +95,7 @@ export default class KLineChartPro implements ChartPro {
               { multiplier: 1, timespan: 'year', text: 'Y' }
             ]
           }
-          timezone={options.timezone ?? 'Asia/Shanghai'}
+          timezone={options.timezone ?? 'Etc/UTC'}
           mainIndicators={options.mainIndicators ?? ['MA']}
           subIndicators={options.subIndicators ?? ['VOL']}
           datafeed={options.datafeed}
