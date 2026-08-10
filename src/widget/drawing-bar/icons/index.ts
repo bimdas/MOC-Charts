@@ -104,15 +104,15 @@ export const mapping = {
 
 export function createSingleLineOptions (locale: string): SelectDataSourceItem[] {
   return  [
+    { key: 'segment', text: i18n('segment', locale) },
+    { key: 'rayLine', text: i18n('ray_line', locale) },
+    { key: 'straightLine', text: i18n('straight_line', locale) },
     { key: 'horizontalStraightLine', text: i18n('horizontal_straight_line', locale) },
     { key: 'horizontalRayLine', text: i18n('horizontal_ray_line', locale) },
     { key: 'horizontalSegment', text: i18n('horizontal_segment', locale) },
     { key: 'verticalStraightLine', text: i18n('vertical_straight_line', locale) },
     { key: 'verticalRayLine', text: i18n('vertical_ray_line', locale) },
     { key: 'verticalSegment', text: i18n('vertical_segment', locale) },
-    { key: 'straightLine', text: i18n('straight_line', locale) },
-    { key: 'rayLine', text: i18n('ray_line', locale) },
-    { key: 'segment', text: i18n('segment', locale) },
     { key: 'arrow', text: i18n('arrow', locale) },
     { key: 'priceLine', text: i18n('price_line', locale) }
   ]

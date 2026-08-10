@@ -56,6 +56,7 @@
     "vite": "^4.1.1",
     "vite-plugin-solid": "^2.6.1",
     "vitepress": "^1.0.0-alpha.75",
+    "klinecharts": "10.0.2",
     "vitest": "^0.28.4"
   },
   "dependencies": {
@@ -63,6 +64,6 @@
     "solid-js": "^1.6.11"
   },
   "peerDependencies": {
-    "klinecharts": ">=9.0.0"
+    "klinecharts": "^10.0.2"
   }
 }

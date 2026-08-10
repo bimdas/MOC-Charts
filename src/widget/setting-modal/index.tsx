@@ -26,13 +26,17 @@ import { getOptions } from './data'
 export interface SettingModalProps {
   locale: string
   currentStyles: Styles
+  currentYAxis: { name: string, reverse: boolean }
   onClose: () => void
   onChange: (style: DeepPartial<Styles>) => void
+  onYAxisChange: (key: 'name' | 'reverse', value: string | boolean) => void
   onRestoreDefault: (options: SelectDataSourceItem[]) => void
 }
 
 const SettingModal: Component<SettingModalProps> = props => {
-  const [styles, setStyles] = createSignal(props.currentStyles)
+  const initialSettings = utils.clone(props.currentStyles) as Styles & { axis?: { name: string, reverse: boolean } }
+  initialSettings.axis = { ...props.currentYAxis }
+  const [styles, setStyles] = createSignal(initialSettings)
   const [options, setOptions] = createSignal(getOptions(props.locale))
 
   createEffect(() => {
@@ -46,7 +50,11 @@ const SettingModal: Component<SettingModalProps> = props => {
     lodashSet(ss, option.key, newValue)
     setStyles(ss)
     setOptions(options().map(op => ({ ...op })))
-    props.onChange(style)
+    if (option.key === 'axis.name' || option.key === 'axis.reverse') {
+      props.onYAxisChange(option.key.slice('axis.'.length) as 'name' | 'reverse', newValue)
+    } else {
+      props.onChange(style)
+    }
   }
 
   return (

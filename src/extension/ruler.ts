@@ -25,14 +25,12 @@ const ruler: OverlayTemplate = {
       color: 'rgba(22, 119, 255, 0.15)'
     },
     line: {
-      // @ts-expect-error
       style: 'dashed',
-      dashValue: [2, 2],
+      dashedValue: [2, 2],
       color: '#1677FF'
     },
     text: {
       color: '#FFFFFF',
-      // @ts-expect-error
       backgroundColor: '#1677FF',
       size: 12,
       paddingLeft: 8,
@@ -42,8 +40,9 @@ const ruler: OverlayTemplate = {
       borderRadius: 4
     }
   },
-  createPointFigures: ({ coordinates, overlay, precision }) => {
+  createPointFigures: ({ chart, coordinates, overlay }) => {
     const figures: any[] = []
+    const pricePrecision = chart.getSymbol()?.pricePrecision ?? 2
     if (coordinates.length > 1) {
       const p1 = coordinates[0]
       const p2 = coordinates[1]
@@ -116,7 +115,7 @@ const ruler: OverlayTemplate = {
       // Calculations
       const valueDiff = value2 - value1
       const pricePercent = (valueDiff / value1) * 100
-      const absValueDiff = Math.abs(valueDiff).toFixed(precision.price)
+      const absValueDiff = Math.abs(valueDiff).toFixed(pricePrecision)
       const bars = Math.abs(index2 - index1)
       
       let durationStr = ''
@@ -135,7 +134,7 @@ const ruler: OverlayTemplate = {
         }
       }
 
-      const text = `${valueDiff > 0 ? '' : '-'}${absValueDiff} (${pricePercent.toFixed(2)}%) ${Math.round(Math.abs(valueDiff) * Math.pow(10, precision.price))}\n${bars} bars, ${durationStr}`
+      const text = `${valueDiff > 0 ? '' : '-'}${absValueDiff} (${pricePercent.toFixed(2)}%) ${Math.round(Math.abs(valueDiff) * Math.pow(10, pricePrecision))}\n${bars} bars, ${durationStr}`
 
       figures.push({
         type: 'text',

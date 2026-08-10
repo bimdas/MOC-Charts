@@ -22,7 +22,7 @@ import i18n from '../../i18n'
 
 export interface OverlaySettingModalProps {
     locale: string
-    overlay: Overlay
+    overlay: Overlay<any>
     onClose: () => void
     onConfirm: (extendData: any) => void
 }

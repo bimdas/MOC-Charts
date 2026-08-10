@@ -44,7 +44,10 @@ export default class KLineChartPro implements ChartPro {
     const fontFamily = 'Inter, sans-serif'
     const fontThemeOverrides = {
       candle: {
-        tooltip: { text: { family: fontFamily } },
+        tooltip: {
+          title: { family: fontFamily },
+          legend: { family: fontFamily }
+        },
         priceMark: {
           high: { textFamily: fontFamily },
           low: { textFamily: fontFamily },
@@ -52,7 +55,10 @@ export default class KLineChartPro implements ChartPro {
         }
       },
       indicator: {
-        tooltip: { text: { family: fontFamily } },
+        tooltip: {
+          title: { family: fontFamily },
+          legend: { family: fontFamily }
+        },
         lastValueMark: { text: { family: fontFamily } }
       },
       xAxis: { tickText: { family: fontFamily } },
@@ -62,8 +68,7 @@ export default class KLineChartPro implements ChartPro {
         vertical: { text: { family: fontFamily } }
       },
       overlay: {
-        text: { family: fontFamily },
-        rectText: { family: fontFamily }
+        text: { family: fontFamily }
       }
     }
 

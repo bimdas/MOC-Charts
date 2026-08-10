@@ -14,14 +14,15 @@
 
 import { OverlayTemplate, LineAttrs, TextAttrs } from 'klinecharts'
 
-const fibonacciSegment: OverlayTemplate = {
+const fibonacciSegment: OverlayTemplate<any> = {
   name: 'fibonacciSegment',
   totalStep: 3,
   needDefaultPointFigure: true,
   needDefaultXAxisFigure: true,
   needDefaultYAxisFigure: true,
-  createPointFigures: ({ coordinates, overlay, precision, bounding }) => {
+  createPointFigures: ({ chart, coordinates, overlay, bounding }) => {
     const figures: any[] = []
+    const pricePrecision = chart.getSymbol()?.pricePrecision ?? 2
 
     const hardcodedDefaults = {
       levels: [
@@ -60,7 +61,7 @@ const fibonacciSegment: OverlayTemplate = {
         const percent = level.value
         const y = coordinates[1].y + yDif * percent
         // @ts-expect-error
-        const price = (points[1].value + valueDif * percent).toFixed(precision.price)
+        const price = (points[1].value + valueDif * percent).toFixed(pricePrecision)
 
         let startX = coordinates[0].x
         let endX = coordinates[1].x

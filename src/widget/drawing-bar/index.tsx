@@ -36,7 +36,7 @@ export interface DrawingBarProps {
 const GROUP_ID = 'drawing_tools'
 
 const DrawingBar: Component<DrawingBarProps> = props => {
-  const [singleLineIcon, setSingleLineIcon] = createSignal('horizontalStraightLine')
+  const [singleLineIcon, setSingleLineIcon] = createSignal('segment')
   const [moreLineIcon, setMoreLineIcon] = createSignal('priceChannelLine')
   const [polygonIcon, setPolygonIcon] = createSignal('circle')
   const [fibonacciIcon, setFibonacciIcon] = createSignal('fibonacciSegment')
