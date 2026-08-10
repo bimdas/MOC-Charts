@@ -78,8 +78,6 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
   let widgetRef: HTMLDivElement | undefined = undefined
   let widget: Nullable<Chart> = null
   let handleMouseDown: (e: MouseEvent) => void
-  let handleMouseUp: (e: MouseEvent) => void
-  let handleClick: (e: MouseEvent) => void
   let isShortcutStarting = false
 
   let priceUnitDom: HTMLElement
@@ -192,50 +190,34 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
 
   onMount(() => {
     handleMouseDown = (e: MouseEvent) => {
-      if (e.shiftKey && e.button === 0 && widget) {
-        const bounding = widgetRef!.getBoundingClientRect()
-        const point = { x: e.clientX - bounding.left, y: e.clientY - bounding.top }
-        const chartPoints = widget.convertFromPixel([point], { paneId: 'candle_pane' })
-        if (chartPoints && Array.isArray(chartPoints) && chartPoints.length > 0) {
-          isShortcutStarting = true
-          widget.createOverlay({
-            name: 'ruler',
-            points: chartPoints,
-            onSelected: (event: any) => {
-              setSelectedOverlayId(event.overlay.id)
-              return true
-            },
-            onDeselected: (event: any) => {
-              widget?.removeOverlay({ id: event.overlay.id })
-              return true
-            }
-          })
-          e.preventDefault()
-          e.stopPropagation()
+      if (e.shiftKey && e.button === 0 && widget && !isShortcutStarting) {
+        isShortcutStarting = true
+        const id = widget.createOverlay({
+          name: 'ruler',
+          onDrawEnd: () => {
+            isShortcutStarting = false
+          },
+          onRemoved: () => {
+            isShortcutStarting = false
+          },
+          onSelected: (event: any) => {
+            setSelectedOverlayId(event.overlay.id)
+            return true
+          },
+          onDeselected: (event: any) => {
+            widget?.removeOverlay({ id: event.overlay.id })
+            return true
+          }
+        })
+        if (!id) {
+          isShortcutStarting = false
         }
-      }
-    }
-
-    handleMouseUp = (e: MouseEvent) => {
-      if (isShortcutStarting) {
-        isShortcutStarting = false
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    }
-
-    handleClick = (e: MouseEvent) => {
-      if (e.shiftKey) {
-        e.preventDefault()
-        e.stopPropagation()
       }
     }
 
     window.addEventListener('resize', documentResize)
     const ref = widgetRef as unknown as HTMLDivElement
     ref?.addEventListener('mousedown', handleMouseDown, true)
-    ref?.addEventListener('mouseup', handleMouseUp, true)
-    ref?.addEventListener('click', handleClick, true)
     widget = init(widgetRef!, {
       formatter: {
         formatDate: ({ dateTimeFormat, timestamp, type }) => {
@@ -382,9 +364,7 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
 
   onCleanup(() => {
     const ref = widgetRef as unknown as HTMLDivElement
-    ref?.removeEventListener('mousedown', handleMouseDown)
-    ref?.removeEventListener('mouseup', handleMouseUp, true)
-    ref?.removeEventListener('click', handleClick, true)
+    ref?.removeEventListener('mousedown', handleMouseDown, true)
     window.removeEventListener('resize', documentResize)
     dispose(widgetRef!)
   })
