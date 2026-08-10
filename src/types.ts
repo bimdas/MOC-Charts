@@ -56,6 +56,7 @@ export interface ChartProOptions {
   mainIndicators?: string[]
   subIndicators?: string[]
   datafeed: Datafeed
+  onDataReady?: () => void
   onPeriodChange?: (period: Period) => void
   onIndicatorChange?: (mainIndicators: string[], subIndicators: string[]) => void
 }

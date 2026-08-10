@@ -104,6 +104,7 @@ export default class KLineChartPro implements ChartPro {
           mainIndicators={options.mainIndicators ?? ['MA']}
           subIndicators={options.subIndicators ?? ['VOL']}
           datafeed={options.datafeed}
+          onDataReady={options.onDataReady}
           onPeriodChange={options.onPeriodChange}
           onIndicatorChange={options.onIndicatorChange} />
       ),

@@ -36,8 +36,9 @@ import { translateTimezone } from './widget/timezone-modal/data'
 
 import { SymbolInfo, Period, ChartProOptions, ChartPro } from './types'
 
-export interface ChartProComponentProps extends Required<Omit<ChartProOptions, 'container' | 'onPeriodChange' | 'onIndicatorChange'>> {
+export interface ChartProComponentProps extends Required<Omit<ChartProOptions, 'container' | 'onDataReady' | 'onPeriodChange' | 'onIndicatorChange'>> {
   ref: (chart: ChartPro) => void
+  onDataReady?: () => void
   onPeriodChange?: (period: Period) => void
   onIndicatorChange?: (mainIndicators: string[], subIndicators: string[]) => void
 }
@@ -319,11 +320,13 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
               ? await props.datafeed.getHistoryKLineData(currentSymbol, currentPeriod, from, to)
               : []
             callback(kLineDataList, { forward: true, backward: false })
+            props.onDataReady?.()
           } else {
             const [to] = adjustFromTo(currentPeriod, anchor, type === 'forward' ? 1 : 0)
             const [from] = adjustFromTo(currentPeriod, to, 500)
             const kLineDataList = await props.datafeed.getHistoryKLineData(currentSymbol, currentPeriod, from, to)
             callback(kLineDataList, { forward: kLineDataList.length > 0, backward: false })
+            props.onDataReady?.()
           }
         } finally {
           setLoadingVisible(false)
