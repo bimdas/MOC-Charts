@@ -656,15 +656,30 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
             onDrawingItemClick={overlay => {
               widget?.createOverlay({
                 ...overlay,
-                ...(overlay.name === 'fibonacciSegment' ? { extendData: getLastFibSettings() } : {}),
+                ...(overlay.name === 'fibonacciSegment' ? { extendData: { ...getLastFibSettings(), isSelected: true } } : {}),
+                onDrawEnd: (event: any) => {
+                  if (event?.overlay?.name === 'fibonacciSegment') {
+                    const extendData = { ...(event.overlay.extendData || {}), isSelected: false }
+                    widget?.overrideOverlay({ id: event.overlay.id, extendData })
+                  }
+                  return true
+                },
                 onSelected: (event: any) => {
                   setSelectedOverlayId(event.overlay.id)
+                  if (event?.overlay?.name === 'fibonacciSegment') {
+                    const extendData = { ...(event.overlay.extendData || {}), isSelected: true }
+                    widget?.overrideOverlay({ id: event.overlay.id, extendData })
+                  }
                   return true
                 },
                 onDeselected: (event: any) => {
                   if (overlay.name === 'ruler') {
                     widget?.removeOverlay({ id: event.overlay.id })
                     return true
+                  }
+                  if (event?.overlay?.name === 'fibonacciSegment') {
+                    const extendData = { ...(event.overlay.extendData || {}), isSelected: false }
+                    widget?.overrideOverlay({ id: event.overlay.id, extendData })
                   }
                   setTimeout(() => {
                     if (selectedOverlayId() === event.overlay.id) {

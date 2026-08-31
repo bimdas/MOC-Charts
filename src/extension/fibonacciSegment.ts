@@ -28,6 +28,7 @@ interface FibExtendData {
   labelPosition?: 'top' | 'middle' | 'bottom'
   p1Snap?: string
   p2Snap?: string
+  isSelected?: boolean
 }
 
 const snapToCandle = (chart: Chart, performPoint: any, performPointIndex: number, extendData: FibExtendData) => {
@@ -115,41 +116,56 @@ const fibonacciSegment: OverlayTemplate<any> = {
     const extendData: FibExtendData = overlay.extendData || defaultExtendData
     const levels = extendData.levels || defaultExtendData.levels || []
 
+    const isDrawing = typeof overlay.currentStep === 'number' && typeof overlay.totalStep === 'number' && overlay.currentStep < overlay.totalStep
+    const ovAny = overlay as any
+    const isSelected = Boolean(
+      isDrawing ||
+      ovAny.isSelected ||
+      ovAny.isHover ||
+      ovAny.isPressed ||
+      ovAny.selected ||
+      ovAny.hover ||
+      extendData.isSelected
+    )
+
     if (coordinates.length > 0) {
-      // 1. Temporary Dynamic Alignment Guides (Crosshair projection rays) for Point 1
-      figures.push({
-        type: 'line',
-        attrs: { coordinates: [{ x: 0, y: coordinates[0].y }, { x: bounding.width, y: coordinates[0].y }] },
-        styles: { style: 'dashed', dashedValue: [3, 3], color: 'rgba(59, 130, 246, 0.4)', size: 1 }
-      })
-      figures.push({
-        type: 'line',
-        attrs: { coordinates: [{ x: coordinates[0].x, y: 0 }, { x: coordinates[0].x, y: bounding.height }] },
-        styles: { style: 'dashed', dashedValue: [3, 3], color: 'rgba(59, 130, 246, 0.4)', size: 1 }
-      })
+      // 1. Temporary Dynamic Alignment Guides (Crosshair projection rays) - ONLY when selected/active
+      if (isSelected) {
+        figures.push({
+          type: 'line',
+          attrs: { coordinates: [{ x: 0, y: coordinates[0].y }, { x: bounding.width, y: coordinates[0].y }] },
+          styles: { style: 'dashed', dashedValue: [3, 3], color: 'rgba(59, 130, 246, 0.4)', size: 1 }
+        })
+        figures.push({
+          type: 'line',
+          attrs: { coordinates: [{ x: coordinates[0].x, y: 0 }, { x: coordinates[0].x, y: bounding.height }] },
+          styles: { style: 'dashed', dashedValue: [3, 3], color: 'rgba(59, 130, 246, 0.4)', size: 1 }
+        })
 
-      // If Point 2 exists
+        if (coordinates.length > 1) {
+          // Horizontal & Vertical guide rays for Point 2
+          figures.push({
+            type: 'line',
+            attrs: { coordinates: [{ x: 0, y: coordinates[1].y }, { x: bounding.width, y: coordinates[1].y }] },
+            styles: { style: 'dashed', dashedValue: [3, 3], color: 'rgba(59, 130, 246, 0.4)', size: 1 }
+          })
+          figures.push({
+            type: 'line',
+            attrs: { coordinates: [{ x: coordinates[1].x, y: 0 }, { x: coordinates[1].x, y: bounding.height }] },
+            styles: { style: 'dashed', dashedValue: [3, 3], color: 'rgba(59, 130, 246, 0.4)', size: 1 }
+          })
+
+          // 2. Trend Connector Baseline Vector between Point 1 and Point 2
+          figures.push({
+            type: 'line',
+            attrs: { coordinates: [coordinates[0], coordinates[1]] },
+            styles: { style: 'dashed', dashedValue: [4, 4], color: '#3b82f6', size: 1.5 }
+          })
+        }
+      }
+
+      // 3. Fibonacci Retracement Levels (Always rendered if 2 points exist)
       if (coordinates.length > 1) {
-        // Horizontal & Vertical guide rays for Point 2
-        figures.push({
-          type: 'line',
-          attrs: { coordinates: [{ x: 0, y: coordinates[1].y }, { x: bounding.width, y: coordinates[1].y }] },
-          styles: { style: 'dashed', dashedValue: [3, 3], color: 'rgba(59, 130, 246, 0.4)', size: 1 }
-        })
-        figures.push({
-          type: 'line',
-          attrs: { coordinates: [{ x: coordinates[1].x, y: 0 }, { x: coordinates[1].x, y: bounding.height }] },
-          styles: { style: 'dashed', dashedValue: [3, 3], color: 'rgba(59, 130, 246, 0.4)', size: 1 }
-        })
-
-        // 2. Trend Connector Baseline Vector between Point 1 and Point 2
-        figures.push({
-          type: 'line',
-          attrs: { coordinates: [coordinates[0], coordinates[1]] },
-          styles: { style: 'dashed', dashedValue: [4, 4], color: '#3b82f6', size: 1.5 }
-        })
-
-        // 3. Fibonacci Retracement Levels
         const yDif = coordinates[0].y - coordinates[1].y
         const points = overlay.points
         // @ts-expect-error
@@ -226,71 +242,42 @@ const fibonacciSegment: OverlayTemplate<any> = {
         })
       }
 
-      // 4. Dual-Layer Touch Grab Handles (Point 1 and Point 2)
-      coordinates.forEach((coord, idx) => {
-        // Outer interactive touch halo
-        figures.push({
-          type: 'circle',
-          attrs: { ...coord, r: 13 },
-          styles: {
-            style: 'stroke_fill',
-            color: 'rgba(59, 130, 246, 0.22)',
-            borderColor: '#3b82f6',
-            borderSize: 1.5
-          }
+      // 4. Dual-Layer Touch Grab Handles - ONLY when selected/active
+      if (isSelected) {
+        coordinates.forEach((coord) => {
+          // Outer interactive touch halo
+          figures.push({
+            type: 'circle',
+            attrs: { ...coord, r: 13 },
+            styles: {
+              style: 'stroke_fill',
+              color: 'rgba(59, 130, 246, 0.22)',
+              borderColor: '#3b82f6',
+              borderSize: 1.5
+            }
+          })
+          // Inner white core dot
+          figures.push({
+            type: 'circle',
+            attrs: { ...coord, r: 4 },
+            styles: {
+              style: 'fill',
+              color: '#ffffff'
+            }
+          })
         })
-        // Inner white core dot
-        figures.push({
-          type: 'circle',
-          attrs: { ...coord, r: 4 },
-          styles: {
-            style: 'fill',
-            color: '#ffffff'
-          }
-        })
-      })
 
-      // 5. Floating Finger-Offset Price / Snap Callout Badges
-      const p1Val = overlay.points[0]?.value
-      if (typeof p1Val === 'number') {
-        const p1SnapText = extendData.p1Snap ? ` [🎯 ${extendData.p1Snap}]` : ''
-        figures.push({
-          type: 'text',
-          ignoreEvent: true,
-          attrs: {
-            x: coordinates[0].x,
-            y: Math.max(16, coordinates[0].y - 20),
-            text: `P1: ${p1Val.toFixed(pricePrecision)}${p1SnapText}`,
-            align: 'center',
-            baseline: 'bottom'
-          },
-          styles: {
-            color: '#ffffff',
-            backgroundColor: '#151924',
-            borderColor: '#3b82f6',
-            borderSize: 1,
-            borderRadius: 4,
-            paddingLeft: 6,
-            paddingRight: 6,
-            paddingTop: 2,
-            paddingBottom: 2,
-            size: 11,
-            family: 'Inter, sans-serif'
-          }
-        })
-      }
-
-      if (coordinates.length > 1) {
-        const p2Val = overlay.points[1]?.value
-        if (typeof p2Val === 'number') {
-          const p2SnapText = extendData.p2Snap ? ` [🎯 ${extendData.p2Snap}]` : ''
+        // 5. Floating Finger-Offset Price / Snap Callout Badges
+        const p1Val = overlay.points[0]?.value
+        if (typeof p1Val === 'number') {
+          const p1SnapText = extendData.p1Snap ? ` [🎯 ${extendData.p1Snap}]` : ''
           figures.push({
             type: 'text',
             ignoreEvent: true,
             attrs: {
-              x: coordinates[1].x,
-              y: Math.max(16, coordinates[1].y - 20),
-              text: `P2: ${p2Val.toFixed(pricePrecision)} (100%)${p2SnapText}`,
+              x: coordinates[0].x,
+              y: Math.max(16, coordinates[0].y - 20),
+              text: `P1: ${p1Val.toFixed(pricePrecision)}${p1SnapText}`,
               align: 'center',
               baseline: 'bottom'
             },
@@ -309,6 +296,37 @@ const fibonacciSegment: OverlayTemplate<any> = {
             }
           })
         }
+
+        if (coordinates.length > 1) {
+          const p2Val = overlay.points[1]?.value
+          if (typeof p2Val === 'number') {
+            const p2SnapText = extendData.p2Snap ? ` [🎯 ${extendData.p2Snap}]` : ''
+            figures.push({
+              type: 'text',
+              ignoreEvent: true,
+              attrs: {
+                x: coordinates[1].x,
+                y: Math.max(16, coordinates[1].y - 20),
+                text: `P2: ${p2Val.toFixed(pricePrecision)} (100%)${p2SnapText}`,
+                align: 'center',
+                baseline: 'bottom'
+              },
+              styles: {
+                color: '#ffffff',
+                backgroundColor: '#151924',
+                borderColor: '#3b82f6',
+                borderSize: 1,
+                borderRadius: 4,
+                paddingLeft: 6,
+                paddingRight: 6,
+                paddingTop: 2,
+                paddingBottom: 2,
+                size: 11,
+                family: 'Inter, sans-serif'
+              }
+            })
+          }
+        }
       }
     }
 
@@ -316,10 +334,12 @@ const fibonacciSegment: OverlayTemplate<any> = {
   },
   performEventPressedMove: ({ chart, points, performPointIndex, performPoint, overlay }: any) => {
     if (!overlay.extendData) overlay.extendData = {}
+    overlay.extendData.isSelected = true
     snapToCandle(chart, performPoint, performPointIndex, overlay.extendData)
   },
   performEventMoveForDrawing: ({ chart, points, performPointIndex, performPoint, overlay }: any) => {
     if (!overlay.extendData) overlay.extendData = {}
+    overlay.extendData.isSelected = true
     snapToCandle(chart, performPoint, performPointIndex, overlay.extendData)
   }
 }
