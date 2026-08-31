@@ -39,11 +39,11 @@ const fibonacciSegment: OverlayTemplate<any> = {
       color: '#ffffff',
       borderColor: '#3b82f6',
       borderSize: 3,
-      radius: 5,
+      radius: 6,
       activeColor: '#ffffff',
       activeBorderColor: '#3b82f6',
       activeBorderSize: 5,
-      activeRadius: 7
+      activeRadius: 8
     }
   },
   createPointFigures: ({ chart, coordinates, overlay, bounding }) => {
@@ -75,7 +75,7 @@ const fibonacciSegment: OverlayTemplate<any> = {
     const extendData: FibExtendData = overlay.extendData || defaultExtendData
     const levels = extendData.levels || defaultExtendData.levels || []
 
-    if (coordinates.length > 1) {
+    if (coordinates.length > 1 && coordinates[0] && coordinates[1]) {
       // 1. Directional Trend Baseline Vector
       figures.push({
         type: 'line',
@@ -88,19 +88,28 @@ const fibonacciSegment: OverlayTemplate<any> = {
         }
       })
 
-      // 2. Fibonacci Retracement Levels
+      // 2. Safely resolve prices for Point 0 and Point 1 even if points[1] is not yet in overlay.points during drawing
+      const points = overlay.points || []
+      const p0Val = typeof points[0]?.value === 'number'
+        ? points[0].value
+        : ((chart as any).convertFromPixel({ x: coordinates[0].x, y: coordinates[0].y }, { paneId: 'candle_pane' })?.value ?? 0)
+
+      const p1Val = typeof points[1]?.value === 'number'
+        ? points[1].value
+        : ((chart as any).convertFromPixel({ x: coordinates[1].x, y: coordinates[1].y }, { paneId: 'candle_pane' })?.value ?? p0Val)
+
       const yDif = coordinates[0].y - coordinates[1].y
-      const points = overlay.points
-      // @ts-expect-error
-      const valueDif = points[0].value - points[1].value
+      const valueDif = p0Val - p1Val
 
       levels.forEach((level: FibLevel) => {
         if (!level.visible) return
 
         const percent = level.value
         const y = coordinates[1].y + yDif * percent
-        // @ts-expect-error
-        const price = (points[1].value + valueDif * percent).toFixed(pricePrecision)
+        const rawPrice = p1Val + valueDif * percent
+        const price = typeof rawPrice === 'number' && !isNaN(rawPrice)
+          ? rawPrice.toFixed(pricePrecision)
+          : ''
 
         let startX = coordinates[0].x
         let endX = coordinates[1].x
