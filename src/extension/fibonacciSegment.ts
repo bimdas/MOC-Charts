@@ -76,19 +76,7 @@ const fibonacciSegment: OverlayTemplate<any> = {
     const levels = extendData.levels || defaultExtendData.levels || []
 
     if (coordinates.length > 1 && coordinates[0] && coordinates[1]) {
-      // 1. Directional Trend Baseline Vector
-      figures.push({
-        type: 'line',
-        attrs: { coordinates: [coordinates[0], coordinates[1]] },
-        styles: {
-          style: 'dashed',
-          dashedValue: [4, 4],
-          color: 'rgba(59, 130, 246, 0.7)',
-          size: 1.5
-        }
-      })
-
-      // 2. Safely resolve prices for Point 0 and Point 1 even if points[1] is not yet in overlay.points during drawing
+      // 1. Safely resolve prices for Point 0 and Point 1 even if points[1] is not yet in overlay.points during drawing
       const points = overlay.points || []
       const p0Val = typeof points[0]?.value === 'number'
         ? points[0].value
