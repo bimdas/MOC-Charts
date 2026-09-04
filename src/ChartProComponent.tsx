@@ -666,6 +666,26 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
           locale={props.locale}
           overlay={overlaySettingModalParams().overlay!}
           onClose={() => { setOverlaySettingModalParams({ visible: false, overlay: null }) }}
+          onLiveUpdate={(extendData, styles) => {
+            const params = overlaySettingModalParams()
+            if (params.overlay) {
+              const overrideParams: any = { id: params.overlay.id, extendData }
+              if (styles) {
+                overrideParams.styles = styles
+              }
+              widget?.overrideOverlay(overrideParams)
+            }
+          }}
+          onCancelRevert={(initialExtendData, initialStyles) => {
+            const params = overlaySettingModalParams()
+            if (params.overlay) {
+              const overrideParams: any = { id: params.overlay.id, extendData: initialExtendData }
+              if (initialStyles) {
+                overrideParams.styles = initialStyles
+              }
+              widget?.overrideOverlay(overrideParams)
+            }
+          }}
           onConfirm={(extendData, styles) => {
             const params = overlaySettingModalParams()
             if (params.overlay) {
