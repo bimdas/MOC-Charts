@@ -94,12 +94,30 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
     const initialOverlayStyles = utils.clone(props.overlay.styles || {})
 
     // ================= Fibonacci State =================
-    const [fibExtendData, setFibExtendData] = createSignal(
-        utils.clone(props.overlay.extendData || defaultFibonacciExtendData)
+    const initialFibSettings = (): any => {
+        const last = getLastFibSettings()
+        const overlayExtend = props.overlay.extendData || {}
+        return {
+            ...defaultFibonacciExtendData,
+            ...last,
+            ...overlayExtend
+        }
+    }
+    const initialFibData = utils.clone(
+        props.overlay.extendData?.levels ? props.overlay.extendData : initialFibSettings()
     )
+    const [fibExtendData, setFibExtendData] = createSignal(utils.clone(initialFibData))
     const [fibTemplates, setFibTemplates] = createSignal<Array<{ name: string, data: any }>>([])
+    const [selectedFibTemplate, setSelectedFibTemplate] = createSignal<string>('Select...')
     const [showSaveFibTemplate, setShowSaveFibTemplate] = createSignal(false)
     const [newFibTemplateName, setNewFibTemplateName] = createSignal('')
+
+    // Auto-apply live changes to Fibonacci retracement
+    const updateFibExtendData = (updater: (prev: any) => any) => {
+        const next = updater(fibExtendData())
+        setFibExtendData(next)
+        props.onLiveUpdate?.(next)
+    }
 
     // ================= Trend Line State =================
     const initialTrendSettings = (): TrendLineExtendData => {
@@ -193,6 +211,12 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
         props.onClose()
     }
 
+    // Cancel & Revert Fibonacci
+    const cancelFibonacci = () => {
+        props.onCancelRevert?.(initialFibData, initialOverlayStyles)
+        props.onClose()
+    }
+
     // Confirm Fibonacci
     const confirmFibonacci = () => {
         const data = fibExtendData()
@@ -273,6 +297,7 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
         }
 
         setFibTemplates(currentTemplates)
+        setSelectedFibTemplate(name)
         localStorage.setItem('klinecharts_fib_templates', JSON.stringify(currentTemplates))
         window.dispatchEvent(new CustomEvent('klinecharts_fib_templates_changed', {
             detail: currentTemplates
@@ -285,7 +310,20 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
     const applyFibTemplate = (name: string) => {
         const template = fibTemplates().find(t => t.name === name)
         if (template) {
-            setFibExtendData(utils.clone(template.data))
+            updateFibExtendData(() => utils.clone(template.data))
+            setSelectedFibTemplate(name)
+        }
+    }
+
+    const deleteFibTemplate = (name: string) => {
+        const currentTemplates = fibTemplates().filter(t => t.name !== name)
+        setFibTemplates(currentTemplates)
+        localStorage.setItem('klinecharts_fib_templates', JSON.stringify(currentTemplates))
+        window.dispatchEvent(new CustomEvent('klinecharts_fib_templates_changed', {
+            detail: currentTemplates
+        }))
+        if (selectedFibTemplate() === name) {
+            setSelectedFibTemplate('Select...')
         }
     }
 
@@ -311,7 +349,7 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
                 'z-index': '9999',
-                width: '300px',
+                width: isTrendLine() ? '300px' : '325px',
                 'background-color': '#1e222d',
                 border: '1px solid #2a2e39',
                 'border-radius': '10px',
@@ -338,7 +376,7 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
             >
                 <div class="header-title-container" style={{ display: 'flex', 'align-items': 'center', gap: '6px' }}>
                     <span class="panel-title" style={{ 'font-size': '13px', 'font-weight': '600', color: '#f0f3fa' }}>
-                        {isTrendLine() ? 'Trend Line Settings' : 'Fib Settings'}
+                        {isTrendLine() ? 'Trend Line Settings' : 'Fib Retracement Settings'}
                     </span>
                 </div>
                 <span
@@ -357,7 +395,7 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                         if (isTrendLine()) {
                             cancelTrendLine()
                         } else {
-                            props.onClose()
+                            cancelFibonacci()
                         }
                     }}>
                     &times;
@@ -1001,110 +1039,505 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
 
             {/* ================= FIBONACCI BODY ================= */}
             <Show when={!isTrendLine()}>
-                {/* Options row */}
-                <div class="panel-options">
-                    <label class="option-toggle">
-                        <input
-                            type="checkbox"
-                            checked={fibExtendData().extendLeft}
-                            onChange={(e: any) => setFibExtendData({ ...fibExtendData(), extendLeft: e.target.checked })}
-                        />
-                        <span>Extend L</span>
-                    </label>
-                    <label class="option-toggle">
-                        <input
-                            type="checkbox"
-                            checked={fibExtendData().extendRight}
-                            onChange={(e: any) => setFibExtendData({ ...fibExtendData(), extendRight: e.target.checked })}
-                        />
-                        <span>Extend R</span>
-                    </label>
-                    <div class="option-select">
-                        <span class="option-label">Align</span>
-                        <Select
-                            style={{ width: '75px' }}
-                            value={fibExtendData().labelAlignment}
-                            dataSource={alignmentOptions}
-                            onSelected={(v: any) => setFibExtendData({ ...fibExtendData(), labelAlignment: v.key })}
-                        />
-                    </div>
-                    <div class="option-select">
-                        <span class="option-label">Pos</span>
-                        <Select
-                            style={{ width: '75px' }}
-                            value={fibExtendData().labelPosition}
-                            dataSource={positionOptions}
-                            onSelected={(v: any) => setFibExtendData({ ...fibExtendData(), labelPosition: v.key })}
-                        />
-                    </div>
-                </div>
-
-                {/* Levels list */}
-                <div class="panel-levels">
-                    <For each={fibExtendData().levels}>
-                        {(level, index) => (
-                            <div class="level-row">
-                                <input
-                                    type="checkbox"
-                                    class="level-check"
-                                    checked={level.visible}
-                                    onChange={(e: any) => {
-                                        const newLevels = [...fibExtendData().levels]
-                                        newLevels[index()].visible = e.target.checked
-                                        setFibExtendData({ ...fibExtendData(), levels: newLevels })
-                                    }}
-                                />
-                                <input
-                                    type="text"
-                                    class="level-value"
-                                    value={level.value}
-                                    onChange={(e: any) => {
-                                        const newLevels = [...fibExtendData().levels]
-                                        newLevels[index()].value = Number(e.target.value)
-                                        setFibExtendData({ ...fibExtendData(), levels: newLevels })
-                                    }}
-                                />
-                                <input
-                                    type="color"
-                                    class="level-color"
-                                    value={level.color}
-                                    onInput={(e: any) => {
-                                        const newLevels = [...fibExtendData().levels]
-                                        newLevels[index()].color = e.target.value
-                                        setFibExtendData({ ...fibExtendData(), levels: newLevels })
-                                    }}
-                                />
-                                <span
-                                    class="level-remove"
-                                    onClick={() => {
-                                        const newLevels = [...fibExtendData().levels]
-                                        newLevels.splice(index(), 1)
-                                        setFibExtendData({ ...fibExtendData(), levels: newLevels })
-                                    }}>
-                                    &times;
-                                </span>
-                            </div>
-                        )}
-                    </For>
+                <div
+                    class="panel-fibonacci"
+                    style={{
+                        padding: '14px',
+                        display: 'flex',
+                        'flex-direction': 'column',
+                        gap: '14px',
+                        'box-sizing': 'border-box'
+                    }}
+                >
+                    {/* Extensions Section */}
                     <div
-                        class="add-level"
-                        onClick={() => {
-                            const newLevels = [...fibExtendData().levels, { value: 0, color: '#787B86', visible: true }]
-                            setFibExtendData({ ...fibExtendData(), levels: newLevels })
-                        }}>
-                        + Add
+                        style={{
+                            display: 'flex',
+                            'flex-direction': 'column',
+                            gap: '6px',
+                            'box-sizing': 'border-box'
+                        }}
+                    >
+                        <span
+                            style={{
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                color: '#848e9c',
+                                'text-transform': 'uppercase',
+                                'letter-spacing': '0.5px'
+                            }}
+                        >
+                            Extensions
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                            <div
+                                class={`extend-pill ${fibExtendData().extendLeft ? 'active' : ''}`}
+                                style={{
+                                    flex: '1',
+                                    height: '32px',
+                                    display: 'flex',
+                                    'align-items': 'center',
+                                    'justify-content': 'center',
+                                    gap: '6px',
+                                    background: fibExtendData().extendLeft ? 'rgba(41, 98, 255, 0.15)' : '#131722',
+                                    border: fibExtendData().extendLeft ? '1px solid #2962ff' : '1px solid #2a2e39',
+                                    'border-radius': '6px',
+                                    'font-size': '11px',
+                                    color: fibExtendData().extendLeft ? '#ffffff' : '#787b86',
+                                    cursor: 'pointer',
+                                    'user-select': 'none',
+                                    transition: 'all 0.15s ease',
+                                    'box-sizing': 'border-box'
+                                }}
+                                onClick={() => updateFibExtendData(prev => ({ ...prev, extendLeft: !prev.extendLeft }))}
+                            >
+                                <span
+                                    class={`pill-check ${fibExtendData().extendLeft ? 'checked' : ''}`}
+                                    style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        'border-radius': '3px',
+                                        border: fibExtendData().extendLeft ? '1px solid #2962ff' : '1px solid #434651',
+                                        background: fibExtendData().extendLeft ? '#2962ff' : 'transparent',
+                                        display: 'flex',
+                                        'align-items': 'center',
+                                        'justify-content': 'center',
+                                        'font-size': '10px',
+                                        'line-height': '1',
+                                        color: '#ffffff',
+                                        'box-sizing': 'border-box'
+                                    }}
+                                >
+                                    {fibExtendData().extendLeft ? '✓' : ''}
+                                </span>
+                                <span>Extend Left</span>
+                            </div>
+                            <div
+                                class={`extend-pill ${fibExtendData().extendRight ? 'active' : ''}`}
+                                style={{
+                                    flex: '1',
+                                    height: '32px',
+                                    display: 'flex',
+                                    'align-items': 'center',
+                                    'justify-content': 'center',
+                                    gap: '6px',
+                                    background: fibExtendData().extendRight ? 'rgba(41, 98, 255, 0.15)' : '#131722',
+                                    border: fibExtendData().extendRight ? '1px solid #2962ff' : '1px solid #2a2e39',
+                                    'border-radius': '6px',
+                                    'font-size': '11px',
+                                    color: fibExtendData().extendRight ? '#ffffff' : '#787b86',
+                                    cursor: 'pointer',
+                                    'user-select': 'none',
+                                    transition: 'all 0.15s ease',
+                                    'box-sizing': 'border-box'
+                                }}
+                                onClick={() => updateFibExtendData(prev => ({ ...prev, extendRight: !prev.extendRight }))}
+                            >
+                                <span
+                                    class={`pill-check ${fibExtendData().extendRight ? 'checked' : ''}`}
+                                    style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        'border-radius': '3px',
+                                        border: fibExtendData().extendRight ? '1px solid #2962ff' : '1px solid #434651',
+                                        background: fibExtendData().extendRight ? '#2962ff' : 'transparent',
+                                        display: 'flex',
+                                        'align-items': 'center',
+                                        'justify-content': 'center',
+                                        'font-size': '10px',
+                                        'line-height': '1',
+                                        color: '#ffffff',
+                                        'box-sizing': 'border-box'
+                                    }}
+                                >
+                                    {fibExtendData().extendRight ? '✓' : ''}
+                                </span>
+                                <span>Extend Right</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Label Alignment & Position Section */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            'flex-direction': 'column',
+                            gap: '8px',
+                            'box-sizing': 'border-box'
+                        }}
+                    >
+                        {/* Label Alignment */}
+                        <div style={{ display: 'flex', 'flex-direction': 'column', gap: '5px' }}>
+                            <span
+                                style={{
+                                    'font-size': '11px',
+                                    'font-weight': '600',
+                                    color: '#848e9c',
+                                    'text-transform': 'uppercase',
+                                    'letter-spacing': '0.5px'
+                                }}
+                            >
+                                Label Alignment
+                            </span>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    gap: '4px',
+                                    background: '#131722',
+                                    padding: '3px',
+                                    'border-radius': '8px',
+                                    border: '1px solid #2a2e39',
+                                    'box-sizing': 'border-box',
+                                    width: '100%'
+                                }}
+                            >
+                                <For each={[
+                                    { key: 'left', label: 'Left' },
+                                    { key: 'center', label: 'Center' },
+                                    { key: 'right', label: 'Right' }
+                                ]}>
+                                    {(item) => {
+                                        const isActive = () => (fibExtendData().labelAlignment || 'right') === item.key
+                                        return (
+                                            <div
+                                                style={{
+                                                    flex: '1',
+                                                    height: '26px',
+                                                    display: 'flex',
+                                                    'align-items': 'center',
+                                                    'justify-content': 'center',
+                                                    'border-radius': '6px',
+                                                    'font-size': '11px',
+                                                    cursor: 'pointer',
+                                                    background: isActive() ? '#2a2e39' : 'transparent',
+                                                    color: isActive() ? '#ffffff' : '#787b86',
+                                                    'font-weight': isActive() ? '600' : 'normal',
+                                                    'box-shadow': isActive() ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none',
+                                                    transition: 'all 0.15s ease',
+                                                    'box-sizing': 'border-box'
+                                                }}
+                                                onClick={() => updateFibExtendData(prev => ({ ...prev, labelAlignment: item.key }))}
+                                            >
+                                                <span>{item.label}</span>
+                                            </div>
+                                        )
+                                    }}
+                                </For>
+                            </div>
+                        </div>
+
+                        {/* Label Position */}
+                        <div style={{ display: 'flex', 'flex-direction': 'column', gap: '5px' }}>
+                            <span
+                                style={{
+                                    'font-size': '11px',
+                                    'font-weight': '600',
+                                    color: '#848e9c',
+                                    'text-transform': 'uppercase',
+                                    'letter-spacing': '0.5px'
+                                }}
+                            >
+                                Label Position
+                            </span>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    gap: '4px',
+                                    background: '#131722',
+                                    padding: '3px',
+                                    'border-radius': '8px',
+                                    border: '1px solid #2a2e39',
+                                    'box-sizing': 'border-box',
+                                    width: '100%'
+                                }}
+                            >
+                                <For each={[
+                                    { key: 'top', label: 'Top' },
+                                    { key: 'middle', label: 'Middle' },
+                                    { key: 'bottom', label: 'Bottom' }
+                                ]}>
+                                    {(item) => {
+                                        const isActive = () => (fibExtendData().labelPosition || 'top') === item.key
+                                        return (
+                                            <div
+                                                style={{
+                                                    flex: '1',
+                                                    height: '26px',
+                                                    display: 'flex',
+                                                    'align-items': 'center',
+                                                    'justify-content': 'center',
+                                                    'border-radius': '6px',
+                                                    'font-size': '11px',
+                                                    cursor: 'pointer',
+                                                    background: isActive() ? '#2a2e39' : 'transparent',
+                                                    color: isActive() ? '#ffffff' : '#787b86',
+                                                    'font-weight': isActive() ? '600' : 'normal',
+                                                    'box-shadow': isActive() ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none',
+                                                    transition: 'all 0.15s ease',
+                                                    'box-sizing': 'border-box'
+                                                }}
+                                                onClick={() => updateFibExtendData(prev => ({ ...prev, labelPosition: item.key }))}
+                                            >
+                                                <span>{item.label}</span>
+                                            </div>
+                                        )
+                                    }}
+                                </For>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Fibonacci Levels Section */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            'flex-direction': 'column',
+                            gap: '6px',
+                            'box-sizing': 'border-box'
+                        }}
+                    >
+                        <span
+                            style={{
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                color: '#848e9c',
+                                'text-transform': 'uppercase',
+                                'letter-spacing': '0.5px'
+                            }}
+                        >
+                            Levels
+                        </span>
+                        <div
+                            class="custom-fib-scrollbar"
+                            style={{
+                                'max-height': '200px',
+                                'overflow-y': 'auto',
+                                'overflow-x': 'hidden',
+                                display: 'flex',
+                                'flex-direction': 'column',
+                                gap: '6px',
+                                'padding-right': '4px',
+                                'box-sizing': 'border-box'
+                            }}
+                        >
+                            <For each={fibExtendData().levels}>
+                                {(level, index) => (
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            'align-items': 'center',
+                                            gap: '8px',
+                                            background: '#131722',
+                                            padding: '4px 8px',
+                                            'border-radius': '6px',
+                                            border: '1px solid #2a2e39',
+                                            'box-sizing': 'border-box',
+                                            width: '100%'
+                                        }}
+                                    >
+                                        {/* Visibility Checkbox */}
+                                        <div
+                                            style={{
+                                                width: '16px',
+                                                height: '16px',
+                                                'border-radius': '3px',
+                                                border: level.visible ? '1px solid #2962ff' : '1px solid #434651',
+                                                background: level.visible ? '#2962ff' : 'transparent',
+                                                display: 'flex',
+                                                'align-items': 'center',
+                                                'justify-content': 'center',
+                                                'font-size': '11px',
+                                                'line-height': '1',
+                                                color: '#ffffff',
+                                                cursor: 'pointer',
+                                                'flex-shrink': '0',
+                                                'box-sizing': 'border-box'
+                                            }}
+                                            onClick={() => {
+                                                updateFibExtendData(prev => {
+                                                    const newLevels = [...prev.levels]
+                                                    newLevels[index()] = { ...newLevels[index()], visible: !newLevels[index()].visible }
+                                                    return { ...prev, levels: newLevels }
+                                                })
+                                            }}
+                                        >
+                                            {level.visible ? '✓' : ''}
+                                        </div>
+
+                                        {/* Value Input */}
+                                        <input
+                                            type="number"
+                                            step="0.001"
+                                            value={level.value}
+                                            style={{
+                                                flex: '1',
+                                                'min-width': '0',
+                                                height: '26px',
+                                                padding: '0 8px',
+                                                margin: '0',
+                                                background: '#1e222d',
+                                                border: '1px solid #2a2e39',
+                                                'border-radius': '4px',
+                                                color: level.visible ? '#d1d4dc' : '#5d6370',
+                                                'font-size': '12px',
+                                                'font-family': 'monospace',
+                                                outline: 'none',
+                                                'box-sizing': 'border-box'
+                                            }}
+                                            onInput={(e: any) => {
+                                                const val = parseFloat(e.target.value)
+                                                if (!isNaN(val)) {
+                                                    updateFibExtendData(prev => {
+                                                        const newLevels = [...prev.levels]
+                                                        newLevels[index()] = { ...newLevels[index()], value: val }
+                                                        return { ...prev, levels: newLevels }
+                                                    })
+                                                }
+                                            }}
+                                        />
+
+                                        {/* Color Swatch Trigger */}
+                                        <label
+                                            title="Pick level color"
+                                            style={{
+                                                position: 'relative',
+                                                width: '24px',
+                                                height: '24px',
+                                                'border-radius': '5px',
+                                                border: '2px solid rgba(255, 255, 255, 0.25)',
+                                                cursor: 'pointer',
+                                                overflow: 'hidden',
+                                                'background-color': level.color,
+                                                'box-shadow': '0 1px 3px rgba(0,0,0,0.4)',
+                                                display: 'inline-block',
+                                                'flex-shrink': '0',
+                                                'box-sizing': 'border-box'
+                                            }}
+                                        >
+                                            <input
+                                                type="color"
+                                                value={level.color}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: '-10px',
+                                                    left: '-10px',
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    opacity: '0',
+                                                    cursor: 'pointer',
+                                                    padding: '0',
+                                                    margin: '0',
+                                                    border: 'none'
+                                                }}
+                                                onInput={(e: any) => {
+                                                    const colorVal = e.target.value
+                                                    updateFibExtendData(prev => {
+                                                        const newLevels = [...prev.levels]
+                                                        newLevels[index()] = { ...newLevels[index()], color: colorVal }
+                                                        return { ...prev, levels: newLevels }
+                                                    })
+                                                }}
+                                            />
+                                        </label>
+
+                                        {/* Remove Level */}
+                                        <span
+                                            title="Remove level"
+                                            style={{
+                                                cursor: 'pointer',
+                                                color: '#787b86',
+                                                'font-size': '16px',
+                                                'line-height': '1',
+                                                padding: '0 4px',
+                                                transition: 'color 0.15s'
+                                            }}
+                                            onMouseEnter={(e: any) => e.target.style.color = '#f23645'}
+                                            onMouseLeave={(e: any) => e.target.style.color = '#787b86'}
+                                            onClick={() => {
+                                                updateFibExtendData(prev => {
+                                                    const newLevels = [...prev.levels]
+                                                    newLevels.splice(index(), 1)
+                                                    return { ...prev, levels: newLevels }
+                                                })
+                                            }}
+                                        >
+                                            &times;
+                                        </span>
+                                    </div>
+                                )}
+                            </For>
+                        </div>
+
+                        {/* + Add Level Button */}
+                        <button
+                            type="button"
+                            style={{
+                                width: '100%',
+                                height: '28px',
+                                background: '#131722',
+                                border: '1px dashed #2a2e39',
+                                'border-radius': '6px',
+                                color: '#2962ff',
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                'align-items': 'center',
+                                'justify-content': 'center',
+                                gap: '4px',
+                                transition: 'all 0.15s ease',
+                                'margin-top': '2px',
+                                'box-sizing': 'border-box'
+                            }}
+                            onMouseEnter={(e: any) => {
+                                e.target.style.borderColor = '#2962ff'
+                                e.target.style.background = 'rgba(41, 98, 255, 0.08)'
+                            }}
+                            onMouseLeave={(e: any) => {
+                                e.target.style.borderColor = '#2a2e39'
+                                e.target.style.background = '#131722'
+                            }}
+                            onClick={() => {
+                                updateFibExtendData(prev => ({
+                                    ...prev,
+                                    levels: [...prev.levels, { value: 0, color: '#787B86', visible: true }]
+                                }))
+                            }}
+                        >
+                            + Add Level
+                        </button>
                     </div>
                 </div>
 
-                {/* Template Action Bar */}
-                <div class="panel-footer" style={{ "margin-top": "16px", "padding": "0 12px 10px", "display": "flex", "justify-content": "space-between", "align-items": "center" }}>
-                    <div class="template-selector" style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
-                        <span class="option-label">Template</span>
+                {/* Fibonacci Template & Action Bar Footer */}
+                <div
+                    class="panel-footer-clean"
+                    style={{
+                        padding: '10px 14px 12px',
+                        'border-top': '1px solid #2a2e39',
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'space-between',
+                        'box-sizing': 'border-box',
+                        width: '100%',
+                        'margin-top': '4px'
+                    }}
+                >
+                    <div
+                        class="template-control-group"
+                        style={{
+                            display: 'flex',
+                            'align-items': 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <span class="template-label" style={{ 'font-size': '11px', color: '#787b86' }}>Template</span>
                         <Select
-                            style={{ width: '120px' }}
-                            value="Select..."
+                            class="template-select-clean"
+                            style={{ width: '105px' }}
+                            value={selectedFibTemplate()}
                             dataSource={[
-                                { key: 'save_new', text: 'Save As...' },
+                                { key: 'save_new', text: '+ Save As...' },
                                 ...fibTemplates().map(t => ({ key: t.name, text: t.name }))
                             ]}
                             onSelected={(v: any) => {
@@ -1115,36 +1548,169 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                                 }
                             }}
                         />
+                        <Show when={selectedFibTemplate() !== 'Select...' && selectedFibTemplate() !== '+ Save As...'}>
+                            <button
+                                type="button"
+                                class="btn-delete-template"
+                                title="Delete template"
+                                style={{
+                                    border: 'none',
+                                    background: 'transparent',
+                                    cursor: 'pointer',
+                                    color: '#f23645',
+                                    'font-size': '16px',
+                                    'line-height': '1',
+                                    padding: '0 4px'
+                                }}
+                                onClick={() => deleteFibTemplate(selectedFibTemplate())}>
+                                &times;
+                            </button>
+                        </Show>
                     </div>
-                    <div class="action-buttons" style={{ display: 'flex', gap: '8px' }}>
-                        <button class="btn-cancel" onClick={() => props.onClose()} style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #454545', color: '#fff', 'border-radius': '4px', cursor: 'pointer' }}>Cancel</button>
-                        <button class="btn-confirm" onClick={confirmFibonacci} style={{ padding: '4px 12px', background: '#2962FF', border: 'none', color: '#fff', 'border-radius': '4px', cursor: 'pointer' }}>Ok</button>
+                    <div
+                        class="dialog-action-buttons"
+                        style={{
+                            display: 'flex',
+                            'align-items': 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        <button
+                            type="button"
+                            class="btn-cancel-clean"
+                            style={{
+                                'box-sizing': 'border-box',
+                                height: '28px',
+                                padding: '0 12px',
+                                'border-radius': '5px',
+                                background: 'transparent',
+                                border: '1px solid #363a45',
+                                color: '#d1d4dc',
+                                'font-size': '11px',
+                                'font-weight': '500',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                            }}
+                            onClick={cancelFibonacci}>
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            class="btn-ok-clean"
+                            style={{
+                                'box-sizing': 'border-box',
+                                height: '28px',
+                                padding: '0 16px',
+                                'border-radius': '5px',
+                                background: '#2962ff',
+                                border: '1px solid #2962ff',
+                                color: '#ffffff',
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                                'box-shadow': '0 1px 4px rgba(41, 98, 255, 0.4)'
+                            }}
+                            onClick={confirmFibonacci}>
+                            Ok
+                        </button>
                     </div>
                 </div>
 
-                {/* Save Template Dialog */}
+                {/* Save Fibonacci Template Dialog */}
                 <Show when={showSaveFibTemplate()}>
-                    <div class="save-template-overlay">
-                        <div class="save-template-dialog">
+                    <div
+                        class="save-template-overlay"
+                        style={{
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            right: '0',
+                            bottom: '0',
+                            background: 'rgba(0, 0, 0, 0.8)',
+                            display: 'flex',
+                            'align-items': 'center',
+                            'justify-content': 'center',
+                            'z-index': '100',
+                            'border-radius': '10px'
+                        }}
+                    >
+                        <div
+                            class="save-template-dialog"
+                            style={{
+                                background: '#1e222d',
+                                padding: '16px',
+                                'border-radius': '8px',
+                                width: '250px',
+                                display: 'flex',
+                                'flex-direction': 'column',
+                                gap: '12px',
+                                border: '1px solid #2a2e39',
+                                'box-shadow': '0 8px 24px rgba(0, 0, 0, 0.6)',
+                                'box-sizing': 'border-box'
+                            }}
+                        >
                             <div style={{ display: 'flex', 'justify-content': 'space-between', 'align-items': 'center' }}>
-                                <span style={{ color: '#D1D4DC', 'font-size': '14px', 'font-weight': 'bold' }}>Save drawing template</span>
-                                <span class="panel-close" onClick={() => setShowSaveFibTemplate(false)}>&times;</span>
+                                <span style={{ 'font-size': '12px', 'font-weight': '600', color: '#f0f3fa' }}>Save drawing template</span>
+                                <span
+                                    style={{ cursor: 'pointer', 'font-size': '18px', color: '#787b86', 'line-height': '1' }}
+                                    onClick={() => setShowSaveFibTemplate(false)}>&times;</span>
                             </div>
-                            <div style={{ display: 'flex', 'flex-direction': 'column', gap: '4px' }}>
-                                <span style={{ color: '#787B86', 'font-size': '12px' }}>New template name</span>
+                            <div style={{ display: 'flex', 'flex-direction': 'column', gap: '5px' }}>
+                                <span style={{ 'font-size': '11px', color: '#787b86' }}>Template name</span>
                                 <input
                                     type="text"
+                                    class="template-name-input"
                                     value={newFibTemplateName()}
                                     onInput={(e: any) => setNewFibTemplateName(e.target.value)}
+                                    placeholder="e.g. Golden Pocket"
                                     style={{
-                                        background: '#131722', border: '1px solid #2A2E39', color: '#D1D4DC',
-                                        padding: '6px 8px', 'border-radius': '4px', outline: 'none'
+                                        width: '100%',
+                                        background: '#131722',
+                                        border: '1px solid #2a2e39',
+                                        color: '#d1d4dc',
+                                        padding: '6px 8px',
+                                        'border-radius': '5px',
+                                        'font-size': '12px',
+                                        outline: 'none',
+                                        'box-sizing': 'border-box'
                                     }}
                                 />
                             </div>
                             <div style={{ display: 'flex', 'justify-content': 'flex-end', gap: '8px', 'margin-top': '4px' }}>
-                                <button onClick={() => setShowSaveFibTemplate(false)} style={{ padding: '4px 12px', background: 'transparent', border: '1px solid #454545', color: '#fff', 'border-radius': '4px', cursor: 'pointer' }}>Cancel</button>
-                                <button onClick={saveFibTemplate} style={{ padding: '4px 12px', background: '#2962FF', border: 'none', color: '#fff', 'border-radius': '4px', cursor: 'pointer' }}>Save</button>
+                                <button
+                                    type="button"
+                                    class="btn-cancel-clean"
+                                    style={{
+                                        height: '26px',
+                                        padding: '0 10px',
+                                        background: 'transparent',
+                                        border: '1px solid #363a45',
+                                        color: '#d1d4dc',
+                                        'border-radius': '4px',
+                                        cursor: 'pointer',
+                                        'font-size': '11px'
+                                    }}
+                                    onClick={() => setShowSaveFibTemplate(false)}>
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-ok-clean"
+                                    style={{
+                                        height: '26px',
+                                        padding: '0 12px',
+                                        background: '#2962ff',
+                                        border: '1px solid #2962ff',
+                                        color: '#fff',
+                                        'border-radius': '4px',
+                                        cursor: 'pointer',
+                                        'font-size': '11px',
+                                        'font-weight': '600'
+                                    }}
+                                    onClick={saveFibTemplate}>
+                                    Save
+                                </button>
                             </div>
                         </div>
                     </div>
