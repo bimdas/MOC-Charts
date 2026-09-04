@@ -302,15 +302,57 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
     ]
 
     return (
-        <div class="klinecharts-pro-overlay-setting-panel" ref={panelRef}>
+        <div
+            class="klinecharts-pro-overlay-setting-panel"
+            ref={panelRef}
+            style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                'z-index': '9999',
+                width: '300px',
+                'background-color': '#1e222d',
+                border: '1px solid #2a2e39',
+                'border-radius': '10px',
+                'box-shadow': '0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06)',
+                'font-size': '12px',
+                color: '#d1d4dc',
+                'user-select': 'none',
+                'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Trebuchet MS", sans-serif',
+                overflow: 'visible',
+                'box-sizing': 'border-box'
+            }}
+        >
             {/* Header */}
-            <div class="panel-header">
-                <div class="header-title-container">
-                    <span class="panel-title">{isTrendLine() ? 'Trend Line Settings' : 'Fib Settings'}</span>
+            <div
+                class="panel-header"
+                style={{
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'space-between',
+                    padding: '12px 14px',
+                    'border-bottom': '1px solid #2a2e39',
+                    'box-sizing': 'border-box'
+                }}
+            >
+                <div class="header-title-container" style={{ display: 'flex', 'align-items': 'center', gap: '6px' }}>
+                    <span class="panel-title" style={{ 'font-size': '13px', 'font-weight': '600', color: '#f0f3fa' }}>
+                        {isTrendLine() ? 'Trend Line Settings' : 'Fib Settings'}
+                    </span>
                 </div>
                 <span
                     class="panel-close"
                     title="Cancel and close"
+                    style={{
+                        cursor: 'pointer',
+                        'font-size': '18px',
+                        'line-height': '1',
+                        color: '#787b86',
+                        transition: 'color 0.15s ease'
+                    }}
+                    onMouseEnter={(e: any) => e.target.style.color = '#ffffff'}
+                    onMouseLeave={(e: any) => e.target.style.color = '#787b86'}
                     onClick={() => {
                         if (isTrendLine()) {
                             cancelTrendLine()
@@ -324,20 +366,89 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
 
             {/* ================= TREND LINE BODY ================= */}
             <Show when={isTrendLine()}>
-                <div class="panel-trendline">
+                <div
+                    class="panel-trendline"
+                    style={{
+                        padding: '14px',
+                        display: 'flex',
+                        'flex-direction': 'column',
+                        gap: '14px',
+                        'box-sizing': 'border-box'
+                    }}
+                >
                     {/* Color Section */}
-                    <div class="trend-section">
-                        <div class="section-row-between">
-                            <span class="section-title">Line Color</span>
-                            <div class="color-picker-box">
+                    <div
+                        class="trend-section"
+                        style={{
+                            display: 'flex',
+                            'flex-direction': 'column',
+                            gap: '8px',
+                            'box-sizing': 'border-box'
+                        }}
+                    >
+                        <div
+                            class="section-row-between"
+                            style={{
+                                display: 'flex',
+                                'align-items': 'center',
+                                'justify-content': 'space-between',
+                                width: '100%'
+                            }}
+                        >
+                            <span
+                                class="section-title"
+                                style={{
+                                    'font-size': '11px',
+                                    'font-weight': '600',
+                                    color: '#848e9c',
+                                    'text-transform': 'uppercase',
+                                    'letter-spacing': '0.5px'
+                                }}
+                            >
+                                Line Color
+                            </span>
+                            <div
+                                class="color-picker-box"
+                                style={{
+                                    display: 'flex',
+                                    'align-items': 'center',
+                                    gap: '8px'
+                                }}
+                            >
                                 <label
                                     class="swatch-btn"
                                     title="Click to choose custom color"
-                                    style={{ "background-color": trendSettings().color }}>
+                                    style={{
+                                        position: 'relative',
+                                        width: '26px',
+                                        height: '26px',
+                                        'border-radius': '6px',
+                                        border: '2px solid rgba(255, 255, 255, 0.3)',
+                                        cursor: 'pointer',
+                                        overflow: 'hidden',
+                                        'background-color': trendSettings().color,
+                                        'box-shadow': '0 1px 4px rgba(0, 0, 0, 0.4)',
+                                        display: 'inline-block',
+                                        'flex-shrink': '0',
+                                        'box-sizing': 'border-box'
+                                    }}
+                                >
                                     <input
                                         type="color"
                                         class="hidden-color-input"
                                         value={trendSettings().color}
+                                        style={{
+                                            position: 'absolute',
+                                            top: '-10px',
+                                            left: '-10px',
+                                            width: '50px',
+                                            height: '50px',
+                                            opacity: '0',
+                                            cursor: 'pointer',
+                                            padding: '0',
+                                            margin: '0',
+                                            border: 'none'
+                                        }}
                                         onInput={(e: any) => updateTrendSettings(prev => ({ ...prev, color: e.target.value }))}
                                     />
                                 </label>
@@ -345,6 +456,21 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                                     type="text"
                                     class="hex-input"
                                     value={trendSettings().color?.toUpperCase() || ''}
+                                    style={{
+                                        width: '74px',
+                                        height: '26px',
+                                        padding: '0 6px',
+                                        margin: '0',
+                                        background: '#131722',
+                                        border: '1px solid #2a2e39',
+                                        'border-radius': '6px',
+                                        color: '#d1d4dc',
+                                        'font-size': '11px',
+                                        'font-family': 'monospace',
+                                        'text-align': 'center',
+                                        outline: 'none',
+                                        'box-sizing': 'border-box'
+                                    }}
                                     onInput={(e: any) => {
                                         const val = e.target.value.trim()
                                         if (/^#[0-9A-Fa-f]{3,8}$/.test(val)) {
@@ -354,79 +480,309 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                                 />
                             </div>
                         </div>
-                        <div class="palette-dots-row">
+                        <div
+                            class="palette-dots-row"
+                            style={{
+                                display: 'flex',
+                                'align-items': 'center',
+                                'justify-content': 'space-between',
+                                width: '100%',
+                                'margin-top': '2px'
+                            }}
+                        >
                             <For each={PRESET_COLORS}>
-                                {(preset) => (
-                                    <div
-                                        class={`palette-dot ${trendSettings().color?.toLowerCase() === preset.toLowerCase() ? 'active' : ''}`}
-                                        style={{ "background-color": preset }}
-                                        title={preset}
-                                        onClick={() => updateTrendSettings(prev => ({ ...prev, color: preset }))}
-                                    />
-                                )}
+                                {(preset) => {
+                                    const isCurrent = () => trendSettings().color?.toLowerCase() === preset.toLowerCase()
+                                    return (
+                                        <div
+                                            class={`palette-dot ${isCurrent() ? 'active' : ''}`}
+                                            title={preset}
+                                            style={{
+                                                width: '22px',
+                                                height: '22px',
+                                                'border-radius': '50%',
+                                                cursor: 'pointer',
+                                                'background-color': preset,
+                                                border: isCurrent() ? '2px solid #ffffff' : '2px solid transparent',
+                                                'box-shadow': isCurrent() ? '0 0 0 2px #2962ff' : 'none',
+                                                transition: 'transform 0.15s, border-color 0.15s',
+                                                'box-sizing': 'border-box'
+                                            }}
+                                            onClick={() => updateTrendSettings(prev => ({ ...prev, color: preset }))}
+                                        />
+                                    )
+                                }}
                             </For>
                         </div>
                     </div>
 
                     {/* Thickness Section */}
-                    <div class="trend-section">
-                        <span class="section-title">Thickness</span>
-                        <div class="thickness-segmented-bar">
+                    <div
+                        class="trend-section"
+                        style={{
+                            display: 'flex',
+                            'flex-direction': 'column',
+                            gap: '6px',
+                            'box-sizing': 'border-box'
+                        }}
+                    >
+                        <span
+                            class="section-title"
+                            style={{
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                color: '#848e9c',
+                                'text-transform': 'uppercase',
+                                'letter-spacing': '0.5px'
+                            }}
+                        >
+                            Thickness
+                        </span>
+                        <div
+                            class="thickness-segmented-bar"
+                            style={{
+                                display: 'flex',
+                                gap: '4px',
+                                background: '#131722',
+                                padding: '3px',
+                                'border-radius': '8px',
+                                border: '1px solid #2a2e39',
+                                'box-sizing': 'border-box',
+                                width: '100%'
+                            }}
+                        >
                             <For each={[1, 2, 3, 4]}>
-                                {(thick) => (
-                                    <div
-                                        class={`segmented-item ${trendSettings().size === thick ? 'active' : ''}`}
-                                        onClick={() => updateTrendSettings(prev => ({ ...prev, size: thick }))}>
+                                {(thick) => {
+                                    const isActive = () => trendSettings().size === thick
+                                    return (
                                         <div
-                                            class="thickness-bar"
+                                            class={`segmented-item ${isActive() ? 'active' : ''}`}
                                             style={{
-                                                height: `${thick}px`,
-                                                "background-color": trendSettings().size === thick ? (trendSettings().color || '#2962ff') : 'rgba(255,255,255,0.7)'
+                                                flex: '1',
+                                                height: '36px',
+                                                display: 'flex',
+                                                'flex-direction': 'column',
+                                                'align-items': 'center',
+                                                'justify-content': 'center',
+                                                gap: '5px',
+                                                'border-radius': '6px',
+                                                cursor: 'pointer',
+                                                background: isActive() ? 'rgba(41, 98, 255, 0.18)' : 'transparent',
+                                                border: isActive() ? '1px solid #2962ff' : '1px solid transparent',
+                                                transition: 'all 0.15s ease',
+                                                'box-sizing': 'border-box'
                                             }}
-                                        />
-                                        <span class="item-label">{thick}px</span>
-                                    </div>
-                                )}
+                                            onClick={() => updateTrendSettings(prev => ({ ...prev, size: thick }))}
+                                        >
+                                            <div
+                                                class="thickness-bar"
+                                                style={{
+                                                    width: '26px',
+                                                    height: `${thick}px`,
+                                                    'border-radius': '1px',
+                                                    'background-color': isActive() ? (trendSettings().color || '#2962ff') : 'rgba(255,255,255,0.6)',
+                                                    transition: 'background-color 0.15s'
+                                                }}
+                                            />
+                                            <span
+                                                class="item-label"
+                                                style={{
+                                                    'font-size': '10px',
+                                                    color: isActive() ? '#2962ff' : '#787b86',
+                                                    'font-weight': isActive() ? '600' : 'normal',
+                                                    'line-height': '1'
+                                                }}
+                                            >
+                                                {thick}px
+                                            </span>
+                                        </div>
+                                    )
+                                }}
                             </For>
                         </div>
                     </div>
 
                     {/* Line Style Section */}
-                    <div class="trend-section">
-                        <span class="section-title">Line Style</span>
-                        <div class="style-segmented-bar">
+                    <div
+                        class="trend-section"
+                        style={{
+                            display: 'flex',
+                            'flex-direction': 'column',
+                            gap: '6px',
+                            'box-sizing': 'border-box'
+                        }}
+                    >
+                        <span
+                            class="section-title"
+                            style={{
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                color: '#848e9c',
+                                'text-transform': 'uppercase',
+                                'letter-spacing': '0.5px'
+                            }}
+                        >
+                            Line Style
+                        </span>
+                        <div
+                            class="style-segmented-bar"
+                            style={{
+                                display: 'flex',
+                                gap: '4px',
+                                background: '#131722',
+                                padding: '3px',
+                                'border-radius': '8px',
+                                border: '1px solid #2a2e39',
+                                'box-sizing': 'border-box',
+                                width: '100%'
+                            }}
+                        >
                             <For each={[
                                 { key: 'solid', label: 'Solid' },
                                 { key: 'dashed', label: 'Dashed' },
                                 { key: 'dotted', label: 'Dotted' }
                             ]}>
-                                {(item) => (
-                                    <div
-                                        class={`style-item ${trendSettings().style === item.key ? 'active' : ''}`}
-                                        onClick={() => updateTrendSettings(prev => ({ ...prev, style: item.key as any }))}>
-                                        <span class="style-text">{item.label}</span>
-                                    </div>
-                                )}
+                                {(item) => {
+                                    const isActive = () => trendSettings().style === item.key
+                                    return (
+                                        <div
+                                            class={`style-item ${isActive() ? 'active' : ''}`}
+                                            style={{
+                                                flex: '1',
+                                                height: '28px',
+                                                display: 'flex',
+                                                'align-items': 'center',
+                                                'justify-content': 'center',
+                                                'border-radius': '6px',
+                                                'font-size': '11px',
+                                                cursor: 'pointer',
+                                                background: isActive() ? '#2a2e39' : 'transparent',
+                                                color: isActive() ? '#ffffff' : '#787b86',
+                                                'font-weight': isActive() ? '600' : 'normal',
+                                                'box-shadow': isActive() ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none',
+                                                transition: 'all 0.15s ease',
+                                                'box-sizing': 'border-box'
+                                            }}
+                                            onClick={() => updateTrendSettings(prev => ({ ...prev, style: item.key as any }))}
+                                        >
+                                            <span>{item.label}</span>
+                                        </div>
+                                    )
+                                }}
                             </For>
                         </div>
                     </div>
 
                     {/* Extension Toggles */}
-                    <div class="trend-section">
-                        <span class="section-title">Extensions</span>
-                        <div class="extend-pills-row">
+                    <div
+                        class="trend-section"
+                        style={{
+                            display: 'flex',
+                            'flex-direction': 'column',
+                            gap: '6px',
+                            'box-sizing': 'border-box'
+                        }}
+                    >
+                        <span
+                            class="section-title"
+                            style={{
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                color: '#848e9c',
+                                'text-transform': 'uppercase',
+                                'letter-spacing': '0.5px'
+                            }}
+                        >
+                            Extensions
+                        </span>
+                        <div
+                            class="extend-pills-row"
+                            style={{
+                                display: 'flex',
+                                gap: '8px',
+                                width: '100%'
+                            }}
+                        >
                             <div
                                 class={`extend-pill ${trendSettings().extendLeft ? 'active' : ''}`}
-                                onClick={() => updateTrendSettings(prev => ({ ...prev, extendLeft: !prev.extendLeft }))}>
-                                <span class={`pill-check ${trendSettings().extendLeft ? 'checked' : ''}`}>
+                                style={{
+                                    flex: '1',
+                                    height: '32px',
+                                    display: 'flex',
+                                    'align-items': 'center',
+                                    'justify-content': 'center',
+                                    gap: '6px',
+                                    background: trendSettings().extendLeft ? 'rgba(41, 98, 255, 0.15)' : '#131722',
+                                    border: trendSettings().extendLeft ? '1px solid #2962ff' : '1px solid #2a2e39',
+                                    'border-radius': '6px',
+                                    'font-size': '11px',
+                                    color: trendSettings().extendLeft ? '#ffffff' : '#787b86',
+                                    cursor: 'pointer',
+                                    'user-select': 'none',
+                                    transition: 'all 0.15s ease',
+                                    'box-sizing': 'border-box'
+                                }}
+                                onClick={() => updateTrendSettings(prev => ({ ...prev, extendLeft: !prev.extendLeft }))}
+                            >
+                                <span
+                                    class={`pill-check ${trendSettings().extendLeft ? 'checked' : ''}`}
+                                    style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        'border-radius': '3px',
+                                        border: trendSettings().extendLeft ? '1px solid #2962ff' : '1px solid #434651',
+                                        background: trendSettings().extendLeft ? '#2962ff' : 'transparent',
+                                        display: 'flex',
+                                        'align-items': 'center',
+                                        'justify-content': 'center',
+                                        'font-size': '10px',
+                                        'line-height': '1',
+                                        color: '#ffffff',
+                                        'box-sizing': 'border-box'
+                                    }}
+                                >
                                     {trendSettings().extendLeft ? '✓' : ''}
                                 </span>
                                 <span>Extend Left</span>
                             </div>
                             <div
                                 class={`extend-pill ${trendSettings().extendRight ? 'active' : ''}`}
-                                onClick={() => updateTrendSettings(prev => ({ ...prev, extendRight: !prev.extendRight }))}>
-                                <span class={`pill-check ${trendSettings().extendRight ? 'checked' : ''}`}>
+                                style={{
+                                    flex: '1',
+                                    height: '32px',
+                                    display: 'flex',
+                                    'align-items': 'center',
+                                    'justify-content': 'center',
+                                    gap: '6px',
+                                    background: trendSettings().extendRight ? 'rgba(41, 98, 255, 0.15)' : '#131722',
+                                    border: trendSettings().extendRight ? '1px solid #2962ff' : '1px solid #2a2e39',
+                                    'border-radius': '6px',
+                                    'font-size': '11px',
+                                    color: trendSettings().extendRight ? '#ffffff' : '#787b86',
+                                    cursor: 'pointer',
+                                    'user-select': 'none',
+                                    transition: 'all 0.15s ease',
+                                    'box-sizing': 'border-box'
+                                }}
+                                onClick={() => updateTrendSettings(prev => ({ ...prev, extendRight: !prev.extendRight }))}
+                            >
+                                <span
+                                    class={`pill-check ${trendSettings().extendRight ? 'checked' : ''}`}
+                                    style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        'border-radius': '3px',
+                                        border: trendSettings().extendRight ? '1px solid #2962ff' : '1px solid #434651',
+                                        background: trendSettings().extendRight ? '#2962ff' : 'transparent',
+                                        display: 'flex',
+                                        'align-items': 'center',
+                                        'justify-content': 'center',
+                                        'font-size': '10px',
+                                        'line-height': '1',
+                                        color: '#ffffff',
+                                        'box-sizing': 'border-box'
+                                    }}
+                                >
                                     {trendSettings().extendRight ? '✓' : ''}
                                 </span>
                                 <span>Extend Right</span>
@@ -436,9 +792,28 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                 </div>
 
                 {/* Trend Line Template Action Bar */}
-                <div class="panel-footer-clean">
-                    <div class="template-control-group">
-                        <span class="template-label">Template</span>
+                <div
+                    class="panel-footer-clean"
+                    style={{
+                        padding: '10px 14px 12px',
+                        'border-top': '1px solid #2a2e39',
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'space-between',
+                        'box-sizing': 'border-box',
+                        width: '100%',
+                        'margin-top': '4px'
+                    }}
+                >
+                    <div
+                        class="template-control-group"
+                        style={{
+                            display: 'flex',
+                            'align-items': 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <span class="template-label" style={{ 'font-size': '11px', color: '#787b86' }}>Template</span>
                         <Select
                             class="template-select-clean"
                             style={{ width: '105px' }}
@@ -460,21 +835,64 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                                 type="button"
                                 class="btn-delete-template"
                                 title="Delete template"
+                                style={{
+                                    border: 'none',
+                                    background: 'transparent',
+                                    cursor: 'pointer',
+                                    color: '#f23645',
+                                    'font-size': '16px',
+                                    'line-height': '1',
+                                    padding: '0 4px'
+                                }}
                                 onClick={() => deleteTrendTemplate(selectedTrendTemplate())}>
                                 &times;
                             </button>
                         </Show>
                     </div>
-                    <div class="dialog-action-buttons">
+                    <div
+                        class="dialog-action-buttons"
+                        style={{
+                            display: 'flex',
+                            'align-items': 'center',
+                            gap: '8px'
+                        }}
+                    >
                         <button
                             type="button"
                             class="btn-cancel-clean"
+                            style={{
+                                'box-sizing': 'border-box',
+                                height: '28px',
+                                padding: '0 12px',
+                                'border-radius': '5px',
+                                background: 'transparent',
+                                border: '1px solid #363a45',
+                                color: '#d1d4dc',
+                                'font-size': '11px',
+                                'font-weight': '500',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                            }}
                             onClick={cancelTrendLine}>
                             Cancel
                         </button>
                         <button
                             type="button"
                             class="btn-ok-clean"
+                            style={{
+                                'box-sizing': 'border-box',
+                                height: '28px',
+                                padding: '0 16px',
+                                'border-radius': '5px',
+                                background: '#2962ff',
+                                border: '1px solid #2962ff',
+                                color: '#ffffff',
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                                'box-shadow': '0 1px 4px rgba(41, 98, 255, 0.4)'
+                            }}
                             onClick={confirmTrendLine}>
                             Ok
                         </button>
@@ -483,25 +901,98 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
 
                 {/* Save Trend Line Template Dialog */}
                 <Show when={showSaveTrendTemplate()}>
-                    <div class="save-template-overlay">
-                        <div class="save-template-dialog">
-                            <div class="template-dialog-header">
-                                <span class="template-dialog-title">Save drawing template</span>
-                                <span class="panel-close" onClick={() => setShowSaveTrendTemplate(false)}>&times;</span>
+                    <div
+                        class="save-template-overlay"
+                        style={{
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            right: '0',
+                            bottom: '0',
+                            background: 'rgba(0, 0, 0, 0.8)',
+                            display: 'flex',
+                            'align-items': 'center',
+                            'justify-content': 'center',
+                            'z-index': '100',
+                            'border-radius': '10px'
+                        }}
+                    >
+                        <div
+                            class="save-template-dialog"
+                            style={{
+                                background: '#1e222d',
+                                padding: '16px',
+                                'border-radius': '8px',
+                                width: '250px',
+                                display: 'flex',
+                                'flex-direction': 'column',
+                                gap: '12px',
+                                border: '1px solid #2a2e39',
+                                'box-shadow': '0 8px 24px rgba(0, 0, 0, 0.6)',
+                                'box-sizing': 'border-box'
+                            }}
+                        >
+                            <div style={{ display: 'flex', 'justify-content': 'space-between', 'align-items': 'center' }}>
+                                <span style={{ 'font-size': '12px', 'font-weight': '600', color: '#f0f3fa' }}>Save drawing template</span>
+                                <span
+                                    style={{ cursor: 'pointer', 'font-size': '18px', color: '#787b86', 'line-height': '1' }}
+                                    onClick={() => setShowSaveTrendTemplate(false)}>&times;</span>
                             </div>
-                            <div class="template-dialog-body">
-                                <span class="input-desc">Template name</span>
+                            <div style={{ display: 'flex', 'flex-direction': 'column', gap: '5px' }}>
+                                <span style={{ 'font-size': '11px', color: '#787b86' }}>Template name</span>
                                 <input
                                     type="text"
                                     class="template-name-input"
                                     value={newTrendTemplateName()}
                                     onInput={(e: any) => setNewTrendTemplateName(e.target.value)}
                                     placeholder="e.g. Key Resistance"
+                                    style={{
+                                        width: '100%',
+                                        background: '#131722',
+                                        border: '1px solid #2a2e39',
+                                        color: '#d1d4dc',
+                                        padding: '6px 8px',
+                                        'border-radius': '5px',
+                                        'font-size': '12px',
+                                        outline: 'none',
+                                        'box-sizing': 'border-box'
+                                    }}
                                 />
                             </div>
-                            <div class="template-dialog-footer">
-                                <button type="button" class="btn-cancel-clean" onClick={() => setShowSaveTrendTemplate(false)}>Cancel</button>
-                                <button type="button" class="btn-ok-clean" onClick={saveTrendTemplate}>Save</button>
+                            <div style={{ display: 'flex', 'justify-content': 'flex-end', gap: '8px', 'margin-top': '4px' }}>
+                                <button
+                                    type="button"
+                                    class="btn-cancel-clean"
+                                    style={{
+                                        height: '26px',
+                                        padding: '0 10px',
+                                        background: 'transparent',
+                                        border: '1px solid #363a45',
+                                        color: '#d1d4dc',
+                                        'border-radius': '4px',
+                                        cursor: 'pointer',
+                                        'font-size': '11px'
+                                    }}
+                                    onClick={() => setShowSaveTrendTemplate(false)}>
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-ok-clean"
+                                    style={{
+                                        height: '26px',
+                                        padding: '0 12px',
+                                        background: '#2962ff',
+                                        border: '1px solid #2962ff',
+                                        color: '#fff',
+                                        'border-radius': '4px',
+                                        cursor: 'pointer',
+                                        'font-size': '11px',
+                                        'font-weight': '600'
+                                    }}
+                                    onClick={saveTrendTemplate}>
+                                    Save
+                                </button>
                             </div>
                         </div>
                     </div>
