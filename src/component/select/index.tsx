@@ -26,15 +26,17 @@ export interface SelectProps {
   valueKey?: string
   dataSource?: SelectDataSourceItem[] | string[]
   onSelected?: (data: SelectDataSourceItem | string) => void
+  dropDirection?: 'down' | 'up'
 }
 
 const Select: Component<SelectProps> = props => {
   const [open, setOpen] = createSignal(false)
+  const isUp = () => props.dropDirection === 'up'
 
   return (
     <div
       style={props.style}
-      class={`klinecharts-pro-select ${props.class ?? ''} ${open() ? 'klinecharts-pro-select-show' : ''}`}
+      class={`klinecharts-pro-select ${props.class ?? ''} ${open() ? 'klinecharts-pro-select-show' : ''} ${isUp() ? 'drop-up' : ''}`}
       tabIndex="0"
       onClick={_ => { setOpen(o => !o) }}
       onBlur={_ => { setOpen(false) }}>
@@ -46,7 +48,14 @@ const Select: Component<SelectProps> = props => {
       {
         (props.dataSource && props.dataSource.length > 0) &&
         <div
-          class="drop-down-container">
+          class="drop-down-container"
+          style={isUp() ? {
+            top: 'auto',
+            bottom: 'calc(100% + 4px)',
+            'transform-origin': 'bottom',
+            'box-shadow': '0 -8px 24px 0 rgba(0, 0, 0, .65)',
+            'min-width': '140px'
+          } : undefined}>
           <ul>
             {
               props.dataSource.map(data => {

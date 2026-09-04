@@ -854,6 +854,7 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                         <span class="template-label" style={{ 'font-size': '11px', color: '#787b86' }}>Template</span>
                         <Select
                             class="template-select-clean"
+                            dropDirection="up"
                             style={{ width: '105px' }}
                             value={selectedTrendTemplate()}
                             dataSource={[
@@ -1534,6 +1535,7 @@ const OverlaySettingModal: Component<OverlaySettingModalProps> = props => {
                         <span class="template-label" style={{ 'font-size': '11px', color: '#787b86' }}>Template</span>
                         <Select
                             class="template-select-clean"
+                            dropDirection="up"
                             style={{ width: '105px' }}
                             value={selectedFibTemplate()}
                             dataSource={[

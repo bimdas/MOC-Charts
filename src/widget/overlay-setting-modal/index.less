@@ -325,6 +325,67 @@
                 color: #787b86;
             }
 
+            .template-select-clean {
+                height: 28px !important;
+                font-size: 11px !important;
+
+                .selector-container {
+                    height: 28px !important;
+                    padding: 0 8px !important;
+                    background: #131722 !important;
+                    border: 1px solid #2a2e39 !important;
+                    border-radius: 5px !important;
+
+                    .value {
+                        font-size: 11px !important;
+                        color: #d1d4dc !important;
+                    }
+
+                    .arrow {
+                        border-top-color: #848e9c !important;
+                        border-top-width: 5px !important;
+                        border-left-width: 4px !important;
+                        border-right-width: 4px !important;
+                    }
+                }
+
+                &.klinecharts-pro-select-show {
+                    .selector-container {
+                        border-color: #2962ff !important;
+
+                        .value {
+                            color: #2962ff !important;
+                        }
+                    }
+                }
+
+                .drop-down-container {
+                    top: auto !important;
+                    bottom: calc(100% + 4px) !important;
+                    transform-origin: bottom !important;
+                    min-width: 140px !important;
+                    background: #1e222d !important;
+                    border: 1px solid #2a2e39 !important;
+                    border-radius: 6px !important;
+                    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.65) !important;
+                    z-index: 1000 !important;
+
+                    ul li {
+                        height: 28px !important;
+                        padding: 0 10px !important;
+                        font-size: 11px !important;
+                        color: #d1d4dc !important;
+                        white-space: nowrap !important;
+                        transition: background 0.15s, color 0.15s;
+
+                        &:hover {
+                            background: rgba(41, 98, 255, 0.18) !important;
+                            color: #ffffff !important;
+                        }
+                    }
+                }
+            }
+
             .btn-delete-template {
                 all: unset;
                 cursor: pointer;
