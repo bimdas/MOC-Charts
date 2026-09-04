@@ -15,7 +15,7 @@
 import { createSignal, createEffect, onMount, Show, onCleanup, startTransition, Component } from 'solid-js'
 
 import {
-  init, dispose, utils, Nullable, Chart, OverlayMode, Styles,
+  init, dispose, utils, Nullable, Chart, OverlayCreate, OverlayMode, Styles,
   PaneOptions, Indicator, DataLoader, PeriodType,
   SymbolInfo as CoreSymbolInfo, Period as CorePeriod
 } from 'klinecharts'
@@ -115,6 +115,25 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
   const [overlaySettingModalParams, setOverlaySettingModalParams] = createSignal({
     visible: false, overlay: null as any
   })
+
+  const handleOverlayDoubleClick = (event: any) => {
+    if (event.overlay.name === 'fibonacciSegment') {
+      setOverlaySettingModalParams({ visible: true, overlay: event.overlay })
+      return true
+    }
+    return false
+  }
+
+  const restoreOverlayEventHandlers = (overlay: string | OverlayCreate): string | OverlayCreate => {
+    const name = typeof overlay === 'string' ? overlay : overlay.name
+    if (name !== 'fibonacciSegment' || (typeof overlay !== 'string' && typeof overlay.onDoubleClick === 'function')) {
+      return overlay
+    }
+    return {
+      ...(typeof overlay === 'string' ? { name: overlay } : overlay),
+      onDoubleClick: handleOverlayDoubleClick
+    }
+  }
 
   props.ref({
     getWidget: () => widget,
@@ -256,6 +275,14 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
     })
 
     if (widget) {
+      const createOverlay = widget.createOverlay.bind(widget)
+      widget.createOverlay = value => {
+        const valueWithHandlers = Array.isArray(value)
+          ? value.map(item => restoreOverlayEventHandlers(item))
+          : restoreOverlayEventHandlers(value)
+        return createOverlay(valueWithHandlers)
+      }
+
       const watermarkContainer = widget.getDom('candle_pane', 'main')
       if (watermarkContainer) {
         let watermark = document.createElement('div')
@@ -673,13 +700,7 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
                   }, 100)
                   return true
                 },
-                onDoubleClick: (event: any) => {
-                  if (overlay.name === 'fibonacciSegment') {
-                    setOverlaySettingModalParams({ visible: true, overlay: event.overlay })
-                    return true
-                  }
-                  return false
-                }
+                onDoubleClick: handleOverlayDoubleClick
               } as any)
             }}
             onModeChange={mode => { widget?.overrideOverlay({ mode: mode as OverlayMode }) }}
