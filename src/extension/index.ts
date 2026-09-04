@@ -17,6 +17,7 @@ import anyWaves from './anyWaves'
 import abcd from './abcd'
 import xabcd from './xabcd'
 import ruler from './ruler'
+import segment from './segment'
 
 const overlays = [
   arrow,
@@ -24,7 +25,8 @@ const overlays = [
   fibonacciCircle, fibonacciSegment, fibonacciSpiral,
   fibonacciSpeedResistanceFan, fibonacciExtension, gannBox,
   threeWaves, fiveWaves, eightWaves, anyWaves, abcd, xabcd,
-  ruler
+  ruler,
+  segment
 ]
 
 export default overlays

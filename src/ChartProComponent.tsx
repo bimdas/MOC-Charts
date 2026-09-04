@@ -30,7 +30,7 @@ import {
   ScreenshotModal, IndicatorSettingModal, SymbolSearchModal, OverlaySettingModal
 } from './widget'
 
-import { getLastFibSettings } from './widget/overlay-setting-modal'
+import { getLastFibSettings, getLastTrendLineSettings } from './widget/overlay-setting-modal'
 
 import { translateTimezone } from './widget/timezone-modal/data'
 
@@ -116,8 +116,10 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
     visible: false, overlay: null as any
   })
 
+  const isSettingSupportedOverlay = (name?: string) => name === 'fibonacciSegment' || name === 'segment'
+
   const handleOverlayDoubleClick = (event: any) => {
-    if (event.overlay.name === 'fibonacciSegment') {
+    if (isSettingSupportedOverlay(event.overlay.name)) {
       setOverlaySettingModalParams({ visible: true, overlay: event.overlay })
       return true
     }
@@ -126,7 +128,7 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
 
   const restoreOverlayEventHandlers = (overlay: string | OverlayCreate): string | OverlayCreate => {
     const name = typeof overlay === 'string' ? overlay : overlay.name
-    if (name !== 'fibonacciSegment' || (typeof overlay !== 'string' && typeof overlay.onDoubleClick === 'function')) {
+    if (!isSettingSupportedOverlay(name) || (typeof overlay !== 'string' && typeof overlay.onDoubleClick === 'function')) {
       return overlay
     }
     return {
@@ -664,10 +666,14 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
           locale={props.locale}
           overlay={overlaySettingModalParams().overlay!}
           onClose={() => { setOverlaySettingModalParams({ visible: false, overlay: null }) }}
-          onConfirm={(extendData) => {
+          onConfirm={(extendData, styles) => {
             const params = overlaySettingModalParams()
             if (params.overlay) {
-              widget?.overrideOverlay({ id: params.overlay.id, extendData })
+              const overrideParams: any = { id: params.overlay.id, extendData }
+              if (styles) {
+                overrideParams.styles = styles
+              }
+              widget?.overrideOverlay(overrideParams)
             }
           }}
         />
@@ -681,9 +687,28 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
           <DrawingBar
             locale={props.locale}
             onDrawingItemClick={overlay => {
+              const extendData = overlay.name === 'fibonacciSegment'
+                ? getLastFibSettings()
+                : (overlay.name === 'segment' ? getLastTrendLineSettings() : undefined)
+              const styles = overlay.name === 'segment' && extendData
+                ? {
+                    line: {
+                      color: extendData.color,
+                      size: extendData.size,
+                      style: extendData.style === 'dotted' ? 'dashed' : extendData.style,
+                      dashedValue: extendData.style === 'dotted' ? [2, 2] : [6, 4]
+                    },
+                    point: {
+                      borderColor: extendData.color,
+                      activeBorderColor: extendData.color
+                    }
+                  }
+                : undefined
+
               widget?.createOverlay({
                 ...overlay,
-                ...(overlay.name === 'fibonacciSegment' ? { extendData: getLastFibSettings() } : {}),
+                ...(extendData ? { extendData } : {}),
+                ...(styles ? { styles } : {}),
                 onSelected: (event: any) => {
                   setSelectedOverlayId(event.overlay.id)
                   return true
