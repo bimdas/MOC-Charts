@@ -282,41 +282,205 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
       if (chartEvent && typeof chartEvent.touchMoveEvent === 'function' && typeof chartEvent.touchStartEvent === 'function') {
         const origTouchStart = chartEvent.touchStartEvent.bind(chartEvent)
         const origTouchMove = chartEvent.touchMoveEvent.bind(chartEvent)
+        const origTouchEnd = typeof chartEvent.touchEndEvent === 'function' ? chartEvent.touchEndEvent.bind(chartEvent) : null
+        const origLongTap = typeof chartEvent.longTapEvent === 'function' ? chartEvent.longTapEvent.bind(chartEvent) : null
 
-        const syncOverlayTouchCrosshair = (e: any) => {
+        const findNearOverlayPoint = (eventCoord: { x: number, y: number }, tolerance = 32) => {
           const chartStore = (widget as any)?.getChartStore()
-          const pressed = chartStore?.getPressedOverlayInfo()
-          if (pressed && pressed.overlay) {
-            const drawPane = (widget as any).getDrawPaneById(pressed.paneId || 'candle_pane')
-            const mainWidget = drawPane?.getMainWidget()
-            if (drawPane && mainWidget && chartEvent._makeWidgetEvent) {
-              const event = chartEvent._makeWidgetEvent(e, mainWidget)
-              chartEvent._touchCoordinate = { x: event.x, y: event.y }
-              chartStore.setCrosshair({ x: event.x, y: event.y, paneId: drawPane.getId() }, { forceInvalidate: true })
+          const drawPane = (widget as any).getDrawPaneById('candle_pane')
+          if (!chartStore || !drawPane) return null
+
+          const yAxis = drawPane.getYAxisComponentById()
+          if (!yAxis) return null
+
+          const clickInfo = chartStore.getClickOverlayInfo()
+          const selectedOverlay = clickInfo?.overlay
+          const allOverlays = chartStore.getOverlaysByPaneId('candle_pane') || []
+          const candidateOverlays = selectedOverlay
+            ? [selectedOverlay, ...allOverlays.filter((o: any) => o.id !== selectedOverlay.id)]
+            : allOverlays
+
+          for (const overlay of candidateOverlays) {
+            if (overlay.lock || !overlay.visible || !overlay.points) continue
+            const points = overlay.points
+            for (let i = 0; i < points.length; i++) {
+              const p = points[i]
+              if (!p) continue
+              let dataIndex: number | null = null
+              if (typeof p.timestamp === 'number') {
+                dataIndex = chartStore.timestampToDataIndex(p.timestamp)
+              } else if (typeof p.dataIndex === 'number') {
+                dataIndex = p.dataIndex
+              }
+              if (dataIndex === null || typeof p.value !== 'number') continue
+              const ptX = chartStore.dataIndexToCoordinate(dataIndex)
+              const ptY = yAxis.convertToPixel(p.value)
+              if (typeof ptX === 'number' && typeof ptY === 'number') {
+                const dist = Math.hypot(eventCoord.x - ptX, eventCoord.y - ptY)
+                if (dist <= tolerance) {
+                  return { overlay, pointIndex: i, ptX, ptY, paneId: drawPane.getId() }
+                }
+              }
             }
           }
+          return null
+        }
+
+        const grabOverlayPoint = (match: { overlay: any, pointIndex: number, ptX: number, ptY: number, paneId: string }, eventCoord: { x: number, y: number }) => {
+          const chartStore = (widget as any)?.getChartStore()
+          if (!chartStore) return
+
+          // Cancel any chart scroll/fling that may have started
+          chartEvent._startScrollCoordinate = null
+          if (chartEvent._flingScrollAnimation) {
+            chartEvent._flingScrollAnimation.cancel()
+            chartEvent._flingScrollAnimation = null
+          }
+
+          chartStore.setClickOverlayInfo({
+            paneId: match.paneId,
+            overlay: match.overlay,
+            figureType: 'point',
+            figureIndex: match.pointIndex,
+            figure: { key: `overlay_figure_point_${match.pointIndex}`, type: 'circle' }
+          })
+
+          const pt = (widget as any).convertFromPixel({ x: eventCoord.x, y: eventCoord.y }, { paneId: match.paneId })
+          if (typeof match.overlay.startPressedMove === 'function') {
+            match.overlay.startPressedMove(pt || {})
+          }
+
+          chartStore.setPressedOverlayInfo({
+            paneId: match.paneId,
+            overlay: match.overlay,
+            figureType: 'point',
+            figureIndex: match.pointIndex,
+            figure: { key: `overlay_figure_point_${match.pointIndex}`, type: 'circle' }
+          })
+
+          chartEvent._touchCoordinate = { x: match.ptX, y: match.ptY }
+          chartStore.setCrosshair({ x: match.ptX, y: match.ptY, paneId: match.paneId }, { forceInvalidate: true })
+          ;(widget as any).updatePane(1)
         }
 
         chartEvent.touchStartEvent = function (e: any) {
+          const chartStore = (widget as any)?.getChartStore()
+          const drawPane = (widget as any).getDrawPaneById('candle_pane')
+          const mainWidget = drawPane?.getMainWidget()
+
           const res = origTouchStart(e)
+
           try {
-            syncOverlayTouchCrosshair(e)
+            const pressed = chartStore?.getPressedOverlayInfo()
+            if (pressed && pressed.overlay) {
+              if (drawPane && mainWidget && chartEvent._makeWidgetEvent) {
+                const event = chartEvent._makeWidgetEvent(e, mainWidget)
+                chartEvent._touchCoordinate = { x: event.x, y: event.y }
+                chartStore.setCrosshair({ x: event.x, y: event.y, paneId: drawPane.getId() }, { forceInvalidate: true })
+              }
+            } else if (mainWidget && chartEvent._makeWidgetEvent) {
+              const event = chartEvent._makeWidgetEvent(e, mainWidget)
+              const match = findNearOverlayPoint(event, 32)
+              if (match) {
+                grabOverlayPoint(match, event)
+                return true
+              }
+            }
           } catch (err) {
-            console.warn('Error in touchStart overlay crosshair sync:', err)
+            console.warn('Error in touchStart overlay handling:', err)
           }
           return res
         }
 
-        chartEvent.touchMoveEvent = function (e: any) {
-          const res = origTouchMove(e)
-          try {
-            syncOverlayTouchCrosshair(e)
-          } catch (err) {
-            console.warn('Error in touchMove overlay crosshair sync:', err)
+        if (origLongTap) {
+          chartEvent.longTapEvent = function (e: any) {
+            try {
+              const chartStore = (widget as any)?.getChartStore()
+              const drawPane = (widget as any).getDrawPaneById('candle_pane')
+              const mainWidget = drawPane?.getMainWidget()
+              const pressed = chartStore?.getPressedOverlayInfo()
+              if ((!pressed || !pressed.overlay) && mainWidget && chartEvent._makeWidgetEvent) {
+                const event = chartEvent._makeWidgetEvent(e, mainWidget)
+                const match = findNearOverlayPoint(event, 35)
+                if (match) {
+                  grabOverlayPoint(match, event)
+                  return true
+                }
+              }
+            } catch (err) {
+              console.warn('Error in longTap overlay handling:', err)
+            }
+            return origLongTap(e)
           }
-          return res
+        }
+
+        chartEvent.touchMoveEvent = function (e: any) {
+          const chartStore = (widget as any)?.getChartStore()
+          let pressed = chartStore?.getPressedOverlayInfo()
+
+          const drawPane = (widget as any).getDrawPaneById((pressed && pressed.overlay && pressed.paneId) || 'candle_pane')
+          const mainWidget = drawPane?.getMainWidget()
+
+          if ((!pressed || !pressed.overlay) && mainWidget && chartEvent._makeWidgetEvent) {
+            const event = chartEvent._makeWidgetEvent(e, mainWidget)
+            const match = findNearOverlayPoint(event, 28)
+            if (match) {
+              grabOverlayPoint(match, event)
+              pressed = chartStore?.getPressedOverlayInfo()
+            }
+          }
+
+          if (pressed && pressed.overlay) {
+            if (drawPane && mainWidget && chartEvent._makeWidgetEvent) {
+              if (e.cancelable && typeof e.preventDefault === 'function') {
+                e.preventDefault()
+              }
+              const event = chartEvent._makeWidgetEvent(e, mainWidget)
+              const bounding = mainWidget.getBounding()
+              // Clamp coordinates within main widget bounds so dragging to edges/top never loses touch
+              const clampedX = Math.max(0, Math.min(bounding.width, event.x))
+              const clampedY = Math.max(0, Math.min(bounding.height, event.y))
+              const clampedEvent = { ...event, x: clampedX, y: clampedY }
+
+              // Update overlay point position
+              mainWidget.dispatchEvent('pressedMouseMoveEvent', clampedEvent)
+
+              // Keep crosshair active & visible at clamped coordinate
+              chartEvent._touchCoordinate = { x: clampedX, y: clampedY }
+              chartStore.setCrosshair({ x: clampedX, y: clampedY, paneId: drawPane.getId() }, { forceInvalidate: true })
+              return true
+            }
+          }
+
+          return origTouchMove(e)
+        }
+
+        if (origTouchEnd) {
+          chartEvent.touchEndEvent = function (e: any) {
+            const chartStore = (widget as any)?.getChartStore()
+            const pressed = chartStore?.getPressedOverlayInfo()
+
+            if (pressed && pressed.overlay) {
+              const drawPane = (widget as any).getDrawPaneById(pressed.paneId || 'candle_pane')
+              const mainWidget = drawPane?.getMainWidget()
+              if (drawPane && mainWidget && chartEvent._makeWidgetEvent) {
+                const event = chartEvent._makeWidgetEvent(e, mainWidget)
+                mainWidget.dispatchEvent('mouseUpEvent', event)
+              }
+              chartStore.setPressedOverlayInfo({
+                paneId: pressed.paneId || 'candle_pane',
+                overlay: null,
+                figureType: 'none',
+                figureIndex: -1,
+                figure: null
+              })
+              ;(widget as any).updatePane(1)
+            }
+            return origTouchEnd(e)
+          }
         }
       }
+
 
       const createOverlay = widget.createOverlay.bind(widget)
       widget.createOverlay = value => {

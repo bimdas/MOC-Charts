@@ -39,11 +39,11 @@ const fibonacciSegment: OverlayTemplate<any> = {
       color: '#ffffff',
       borderColor: '#3b82f6',
       borderSize: 3,
-      radius: 6,
+      radius: 7,
       activeColor: '#ffffff',
       activeBorderColor: '#3b82f6',
       activeBorderSize: 5,
-      activeRadius: 8
+      activeRadius: 9
     }
   },
   createPointFigures: ({ chart, coordinates, overlay, bounding }) => {

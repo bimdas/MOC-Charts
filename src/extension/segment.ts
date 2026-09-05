@@ -93,12 +93,12 @@ const segment: OverlayTemplate<any> = {
     point: {
       color: '#ffffff',
       borderColor: '#2962FF',
-      borderSize: 2,
-      radius: 5,
+      borderSize: 3,
+      radius: 7,
       activeColor: '#ffffff',
       activeBorderColor: '#2962FF',
-      activeBorderSize: 3,
-      activeRadius: 6
+      activeBorderSize: 5,
+      activeRadius: 9
     }
   },
   createPointFigures: ({ coordinates, overlay, bounding }) => {
