@@ -277,6 +277,47 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
     })
 
     if (widget) {
+      // Fix touchscreen tablet overlay point dragging crosshair guides
+      const chartEvent = (widget as any)._chartEvent
+      if (chartEvent && typeof chartEvent.touchMoveEvent === 'function' && typeof chartEvent.touchStartEvent === 'function') {
+        const origTouchStart = chartEvent.touchStartEvent.bind(chartEvent)
+        const origTouchMove = chartEvent.touchMoveEvent.bind(chartEvent)
+
+        const syncOverlayTouchCrosshair = (e: any) => {
+          const chartStore = (widget as any)?.getChartStore()
+          const pressed = chartStore?.getPressedOverlayInfo()
+          if (pressed && pressed.overlay) {
+            const drawPane = (widget as any).getDrawPaneById(pressed.paneId || 'candle_pane')
+            const mainWidget = drawPane?.getMainWidget()
+            if (drawPane && mainWidget && chartEvent._makeWidgetEvent) {
+              const event = chartEvent._makeWidgetEvent(e, mainWidget)
+              chartEvent._touchCoordinate = { x: event.x, y: event.y }
+              chartStore.setCrosshair({ x: event.x, y: event.y, paneId: drawPane.getId() }, { forceInvalidate: true })
+            }
+          }
+        }
+
+        chartEvent.touchStartEvent = function (e: any) {
+          const res = origTouchStart(e)
+          try {
+            syncOverlayTouchCrosshair(e)
+          } catch (err) {
+            console.warn('Error in touchStart overlay crosshair sync:', err)
+          }
+          return res
+        }
+
+        chartEvent.touchMoveEvent = function (e: any) {
+          const res = origTouchMove(e)
+          try {
+            syncOverlayTouchCrosshair(e)
+          } catch (err) {
+            console.warn('Error in touchMove overlay crosshair sync:', err)
+          }
+          return res
+        }
+      }
+
       const createOverlay = widget.createOverlay.bind(widget)
       widget.createOverlay = value => {
         const valueWithHandlers = Array.isArray(value)
