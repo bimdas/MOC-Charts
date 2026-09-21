@@ -103,6 +103,8 @@ export default class KLineChartPro implements ChartPro {
           timezone={options.timezone ?? 'Etc/UTC'}
           mainIndicators={options.mainIndicators ?? ['MA']}
           subIndicators={options.subIndicators ?? ['VOL']}
+          tradeMarkersVisible={options.tradeMarkersVisible}
+          onTradeMarkersToggle={options.onTradeMarkersToggle}
           datafeed={options.datafeed}
           onDataReady={options.onDataReady}
           onPeriodChange={options.onPeriodChange}
@@ -167,5 +169,13 @@ export default class KLineChartPro implements ChartPro {
 
   getPeriod(): Period {
     return this._chartApi!.getPeriod()
+  }
+
+  setTradeMarkersVisible(visible: boolean): void {
+    this._chartApi?.setTradeMarkersVisible(visible)
+  }
+
+  getTradeMarkersVisible(): boolean {
+    return this._chartApi?.getTradeMarkersVisible() ?? true
   }
 }

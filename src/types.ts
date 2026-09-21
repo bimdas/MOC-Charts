@@ -59,6 +59,8 @@ export interface ChartProOptions {
   onDataReady?: () => void
   onPeriodChange?: (period: Period) => void
   onIndicatorChange?: (mainIndicators: string[], subIndicators: string[]) => void
+  tradeMarkersVisible?: boolean
+  onTradeMarkersToggle?: () => void
 }
 
 export interface ChartPro {
@@ -75,4 +77,6 @@ export interface ChartPro {
   getSymbol(): SymbolInfo
   setPeriod(period: Period): void
   getPeriod(): Period
+  setTradeMarkersVisible(visible: boolean): void
+  getTradeMarkersVisible(): boolean
 }

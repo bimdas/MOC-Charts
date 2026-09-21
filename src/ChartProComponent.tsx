@@ -36,11 +36,13 @@ import { translateTimezone } from './widget/timezone-modal/data'
 
 import { SymbolInfo, Period, ChartProOptions, ChartPro } from './types'
 
-export interface ChartProComponentProps extends Required<Omit<ChartProOptions, 'container' | 'onDataReady' | 'onPeriodChange' | 'onIndicatorChange'>> {
+export interface ChartProComponentProps extends Required<Omit<ChartProOptions, 'container' | 'onDataReady' | 'onPeriodChange' | 'onIndicatorChange' | 'tradeMarkersVisible' | 'onTradeMarkersToggle'>> {
   ref: (chart: ChartPro) => void
   onDataReady?: () => void
   onPeriodChange?: (period: Period) => void
   onIndicatorChange?: (mainIndicators: string[], subIndicators: string[]) => void
+  tradeMarkersVisible?: boolean
+  onTradeMarkersToggle?: () => void
 }
 
 function toCoreSymbol(symbol: SymbolInfo): CoreSymbolInfo {
@@ -102,6 +104,14 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
 
   const [drawingBarVisible, setDrawingBarVisible] = createSignal(props.drawingBarVisible ?? true)
 
+  const [tradeMarkersVisible, setTradeMarkersVisible] = createSignal(props.tradeMarkersVisible ?? true)
+
+  createEffect(() => {
+    if (props.tradeMarkersVisible !== undefined) {
+      setTradeMarkersVisible(props.tradeMarkersVisible)
+    }
+  })
+
   const [selectedOverlayId, setSelectedOverlayId] = createSignal<string>('')
 
   const [symbolSearchModalVisible, setSymbolSearchModalVisible] = createSignal(false)
@@ -150,7 +160,9 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
     setSymbol,
     getSymbol: () => symbol(),
     setPeriod,
-    getPeriod: () => period()
+    getPeriod: () => period(),
+    setTradeMarkersVisible,
+    getTradeMarkersVisible: () => tradeMarkersVisible()
   })
 
   const documentResize = () => {
@@ -845,6 +857,11 @@ const ChartProComponent: Component<ChartProComponentProps> = props => {
         spread={drawingBarVisible()}
         period={period()}
         periods={props.periods}
+        tradeMarkersVisible={tradeMarkersVisible()}
+        onTradeMarkersToggle={props.onTradeMarkersToggle ? () => {
+          setTradeMarkersVisible(!tradeMarkersVisible())
+          props.onTradeMarkersToggle?.()
+        } : undefined}
         onMenuClick={async () => {
           try {
             await startTransition(() => setDrawingBarVisible(!drawingBarVisible()))
